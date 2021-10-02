@@ -1,18 +1,20 @@
 import os
+from dotenv import load_dotenv
 
 import discord
+from discord.ext import commands
 
+bot = commands.Bot(command_prefix = "%")
+load_dotenv()
+token = os.environ.get("DISCORD_TOKEN")
 
-bot = discord.Bot()
-discord_token = os.getenv("DISCORD_TOKEN", None)
+@bot.event
+async def on_ready():
+        print(f"{bot.user} is ready!")
 
-@bot.slash_command()
-async def hello(ctx, name: str = None):
-    name = name or ctx.author.name
-    await ctx.respond(f"Hello {name}!")
+@bot.slash_command(guild_ids=[747905921115619399,433922248802304023])  # create a slash command for the supplied guilds
+async def hello(ctx):
+    """Say hello to the bot"""  # the command description can be supplied as the docstring
+    await ctx.send(f"Hello, {ctx.author.display_name}!")
 
-@bot.user_command(name="Say Hello")
-async def hi(ctx, user):
-    await ctx.respond(f"{ctx.author.mention} says hello to {user.name}!")
-
-bot.run(discord_token)
+bot.run(token)
