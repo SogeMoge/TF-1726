@@ -53,3 +53,7 @@ docs/_build/
 env*
 .env
 .vscode/.ropeproject/objectdb
+
+# DB
+*.db
+elo.db
