@@ -106,6 +106,28 @@ def select_rating_sql(conn, member_id):
 
     return cur.fetchone()[0]
 
+def select_k_regular(conn):
+    """
+    Query date
+    :param conn: the Connection object
+    :return:
+    """
+    cur = conn.cursor()
+    cur.execute("SELECT int_value FROM properties WHERE property_name = 'k_regular'")
+
+    return cur.fetchone()[0]
+
+def select_k_tournament(conn):
+    """
+    Query date
+    :param conn: the Connection object
+    :return:
+    """
+    cur = conn.cursor()
+    cur.execute("SELECT int_value FROM properties WHERE property_name = 'k_tournament'")
+
+    return cur.fetchone()[0]
+
 def select_curr_date(conn):
     """
     Query date
@@ -113,9 +135,23 @@ def select_curr_date(conn):
     :return:
     """
     cur = conn.cursor()
-    cur.execute("SELECT date('now', 'localtime')")
+    cur.execute("SELECT datetime('now', 'localtime')")
 
     return cur.fetchone()[0]
+
+def set_properties(conn, properties):
+    """
+    Create a new project into the projects table
+    :param conn:
+    :param project:
+    :return: project id
+    """
+    sql = ''' INSERT INTO properties(property_name,int_value,float_value,char_value,date_value)
+              VALUES(?,?,?,?,?) '''
+    cur = conn.cursor()
+    cur.execute(sql, properties)
+    conn.commit()
+    return cur.lastrowid
 
 
 db = os.environ.get("DATABASE")
@@ -187,12 +223,12 @@ async def register(ctx, member: discord.Member):
 @permissions.has_role("league")
 async def results(ctx, winner: discord.Member, winner_points, looser: discord.Member, looser_points):
     """Submit regular leage game results."""
-    sql_get_k = f"""SELECT int_value FROM properties WHERE property_name = 'K_regular';"""
+    sql_get_k = f"""SELECT int_value FROM properties WHERE property_name = 'k_regular';"""
     
     #pt = points
     
     # K = execute_sql(conn, sql_get_k)
-    K = 32
+    K = select_k_regular(conn)
     
     ## extract current rating for message winner
     # winner rating
@@ -218,8 +254,8 @@ async def results(ctx, winner: discord.Member, winner_points, looser: discord.Me
     
     curr_date = select_curr_date(conn)
     #insert game entry
-    game_res = (winner.id, winner_points, Rna_diff, looser.id, looser_points, Rnop_diff, curr_date);
-    project_id = insert_regular_win(conn, game_res)
+    game_result = (winner.id, winner_points, Rna_diff, looser.id, looser_points, Rnop_diff, curr_date);
+    project_id = insert_regular_win(conn, game_result)
 
     update_member(conn, (Rna, winner.id))
     update_member(conn, (Rnop, looser.id))
@@ -227,38 +263,7 @@ async def results(ctx, winner: discord.Member, winner_points, looser: discord.Me
     Ra = select_rating_sql(conn, winner.id)
     Rop = select_rating_sql(conn, looser.id)
 
-    await ctx.respond(f"Results submitted!\n {winner.display_name} is now at{Ra}\n{looser.display_name} is now {Rop}")
-    # ## Create win game entry for message author
-    # sql_win_game_res = 'INSERT INTO games (winnedr_id,winner_score,looser_id,looser_score,rating_diff,game_date) VALUES({gtourney},{member1.id},{member2.id},"win","{pt}")'
-    # conn.commit()
-    # # update rating and game statistics
-    # cursor.execute(f'UPDATE rating SET rating = {Rna}, games = games + 1, wins = wins + 1 where member_id={member1.id}')
-    # conn.commit()
-
-    # # update rating and game statistics
-    # cursor.execute(f'UPDATE rating SET rating = {Rnop}, games = games + 1, losses = losses + 1 where member_id={member2.id}')
-    # conn.commit()
-
-#@bot.command(name='register', help=' - apply league role to a user', #aliases=['reg'])
-#@commands.has_role('league admin')
-#async def giverole(ctx, member: discord.Member):
-#     try:
-#        role = get(ctx.guild.roles, name="league")                    # role you want to add to a user
-#        if role in member.roles:                                      # checks if user has such role
-#            await ctx.send(f"{member.name} has league role already")
-#        else:
-#            # Inserts row with user data into db as well as default game stat values
-#            cursor.execute(f"INSERT INTO rating (member_id, member_name) VALUES ({member.id}, '{member.name}')")
-#            conn.commit()
-#            await ctx.send(f"League account created")
-            # add league role
-#            await member.add_roles(role)
-            # pretty outpun in chat
-#            embed = discord.Embed(title="Registration successful\nWelcome to the league!", colour=discord.Colour(0x6790a7))
-#            embed.set_footer(text=member.name, icon_url = member.avatar_url)
-#            await ctx.send(embed=embed)
-#     except: # simple error handler if bot tries to insert duplicated value
-#         await ctx.send(f"It seems that {member.name} has rating assigned already but has no league role")
+    await ctx.respond(f"Results submitted!\n {winner.display_name} is now at {Ra}\n{looser.display_name} is now {Rop}")
 
 
 
@@ -307,6 +312,10 @@ sql_drop_properties_table = """DROP TABLE properties;"""
 
 sql_drop_games_table = """DROP TABLE games;"""
 
+k_regular_properties = ("k_regular", 16, None, None, None)
+k_tournament_properties = ("k_tournament", 32, None, None, None)
+
+
 
 ##########################             ##########################
 ########################## DB COMMANDS ##########################
@@ -352,6 +361,9 @@ async def recreate_tables(ctx):
 
         # create games table
         create_table(conn, sql_create_games_table)
+
+        set_properties(conn, k_regular_properties)
+        set_properties(conn, k_tournament_properties)
     else:
         print("Error! cannot create the database connection.")
 
