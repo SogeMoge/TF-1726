@@ -54,7 +54,7 @@ def drop_table(conn, drop_table_sql):
     except Error as e:
         print(e)
 
-def execute_sql(conn, sql_querry):
+def insert_sql(conn, sql_querry):
     """ execute querry from sql_querry statement
     :param conn: Connection object
     :param sql_querry: a SQL statement
@@ -65,6 +65,58 @@ def execute_sql(conn, sql_querry):
         c.execute(sql_querry)
     except Error as e:
         print(e)
+
+def insert_regular_win(conn, game_result):
+    """
+    Submit a new game in the games table
+    :param conn:
+    :param win_result:
+    :return: game id
+    """
+    sql = ''' INSERT INTO games (winner_id,winner_score,winner_rating_diff,looser_id,looser_score,looser_rating_diff,game_date)
+              VALUES(?,?,?,?,?,?,?) '''
+    cur = conn.cursor()
+    cur.execute(sql, game_result)
+    conn.commit()
+    return cur.lastrowid
+
+def update_member(conn, rating):
+    """
+    update member's rating and streak
+    :param conn:
+    :param rating:
+    :return: project id
+    """
+    sql = ''' UPDATE members
+              SET rating = ?
+              WHERE member_id = ?'''
+    cur = conn.cursor()
+    cur.execute(sql, rating)
+    conn.commit()
+
+def select_rating_sql(conn, member_id):
+    """
+    Query all rows in the tasks table
+    :param conn: the Connection object
+    :param member_id:
+    :return:
+    """
+    cur = conn.cursor()
+    cur.execute("SELECT rating FROM members WHERE member_id=?", (member_id,))
+
+    return cur.fetchone()[0]
+
+def select_curr_date(conn):
+    """
+    Query date
+    :param conn: the Connection object
+    :return:
+    """
+    cur = conn.cursor()
+    cur.execute("SELECT date('now', 'localtime')")
+
+    return cur.fetchone()[0]
+
 
 db = os.environ.get("DATABASE")
 conn = create_connection(db)
@@ -120,7 +172,7 @@ async def register(ctx, member: discord.Member):
     else:
         # Inserts row with user data into db as well as default game stat values
         insert_member_sql_querry = f"""INSERT INTO members (member_id, member_name) VALUES ({member.id}, '{member.name}');"""
-        execute_sql(conn, insert_member_sql_querry)
+        insert_sql(conn, insert_member_sql_querry)
         conn.commit()
         # add league role
         await member.add_roles(role)
@@ -131,7 +183,61 @@ async def register(ctx, member: discord.Member):
 #    except: # simple error handler if bot tries to insert duplicated value
 #        await ctx.respond(f"It seems that registration for {member.display_name} has failed")
 
+@bot.slash_command(guild_ids=[747905921115619399], default_permission=False)
+@permissions.has_role("league")
+async def results(ctx, winner: discord.Member, winner_points, looser: discord.Member, looser_points):
+    """Submit regular leage game results."""
+    sql_get_k = f"""SELECT int_value FROM properties WHERE property_name = 'K_regular';"""
+    
+    #pt = points
+    
+    # K = execute_sql(conn, sql_get_k)
+    K = 32
+    
+    ## extract current rating for message winner
+    # winner rating
+    Ra = select_rating_sql(conn, winner.id)
 
+    ## extract current rating for mentioned looser
+    # looser rating
+    Rop = select_rating_sql(conn, looser.id) 
+    ### calculating ELO ###
+
+    ## gathered delta points from current game result
+    Ea = round( 1 / (1 + 10 ** ((Rop - Ra) / 400)), 2)
+    Eop = round( 1 / (1 + 10 ** ((Ra - Rop) / 400 )), 2)
+    
+    ## calculate new rating
+    # Calculate new Ra as Rna, 1 for win
+    Rna = round( Ra + K * (1 - Ea), 2)
+    Rna_diff = round(Rna - Ra, 2)
+    # Calculate new Rop as Rnop, 0 for loss
+    Rnop = round( Rop + K * (0 - Eop), 2)
+    Rnop_diff = round(Rop - Rnop, 2)
+    
+    
+    curr_date = select_curr_date(conn)
+    #insert game entry
+    game_res = (winner.id, winner_points, Rna_diff, looser.id, looser_points, Rnop_diff, curr_date);
+    project_id = insert_regular_win(conn, game_res)
+
+    update_member(conn, (Rna, winner.id))
+    update_member(conn, (Rnop, looser.id))
+
+    Ra = select_rating_sql(conn, winner.id)
+    Rop = select_rating_sql(conn, looser.id)
+
+    await ctx.respond(f"Results submitted!\n {winner.display_name} is now at{Ra}\n{looser.display_name} is now {Rop}")
+    # ## Create win game entry for message author
+    # sql_win_game_res = 'INSERT INTO games (winnedr_id,winner_score,looser_id,looser_score,rating_diff,game_date) VALUES({gtourney},{member1.id},{member2.id},"win","{pt}")'
+    # conn.commit()
+    # # update rating and game statistics
+    # cursor.execute(f'UPDATE rating SET rating = {Rna}, games = games + 1, wins = wins + 1 where member_id={member1.id}')
+    # conn.commit()
+
+    # # update rating and game statistics
+    # cursor.execute(f'UPDATE rating SET rating = {Rnop}, games = games + 1, losses = losses + 1 where member_id={member2.id}')
+    # conn.commit()
 
 #@bot.command(name='register', help=' - apply league role to a user', #aliases=['reg'])
 #@commands.has_role('league admin')
@@ -187,9 +293,10 @@ sql_create_games_table = """CREATE TABLE IF NOT EXISTS games (
                                 game_id integer UNIQUE PRIMARY KEY autoincrement,
                                 winner_id integer REFERENCES members(member_id),
                                 winner_score integer NOT NULL,
+                                winner_rating_diff integer NOT NULL,
                                 looser_id integer REFERENCES members(member_id),
                                 looser_score integer NOT NULL,
-                                rating_diff integer NOT NULL,
+                                looser_rating_diff integer NOT NULL,
                                 tournament boolean DEFAULT FALSE,
                                 game_date date NOT NULL
                             );"""
@@ -228,13 +335,13 @@ async def create_tables(ctx):
 async def recreate_tables(ctx):
     """Drop and Create tables for fresh start"""
     if conn is not None:
-        # create members table
+        # drop members table
         drop_table(conn, sql_drop_members_table)
 
-        # create settings table
+        # drop properties table
         drop_table(conn, sql_drop_properties_table)
 
-        # create games table
+        # drop games table
         drop_table(conn, sql_drop_games_table)
         
         # create members table
