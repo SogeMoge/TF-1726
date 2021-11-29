@@ -313,6 +313,7 @@ sql_drop_properties_table = """DROP TABLE properties;"""
 sql_drop_games_table = """DROP TABLE games;"""
 
 k_regular_properties = ("k_regular", 16, None, None, None)
+
 k_tournament_properties = ("k_tournament", 32, None, None, None)
 
 
@@ -326,14 +327,16 @@ k_tournament_properties = ("k_tournament", 32, None, None, None)
 async def create_tables(ctx):
     """Create tables first time"""
     if conn is not None:
-        # create members table
+
         create_table(conn, sql_create_members_table)
 
-        # create settings table
         create_table(conn, sql_create_properties_table)
 
-        # create games table
         create_table(conn, sql_create_games_table)
+
+        set_properties(conn, k_regular_properties)
+
+        set_properties(conn, k_tournament_properties)
     else:
         print("Error! cannot create the database connection.")
 
@@ -344,25 +347,21 @@ async def create_tables(ctx):
 async def recreate_tables(ctx):
     """Drop and Create tables for fresh start"""
     if conn is not None:
-        # drop members table
+
         drop_table(conn, sql_drop_members_table)
 
-        # drop properties table
         drop_table(conn, sql_drop_properties_table)
 
-        # drop games table
         drop_table(conn, sql_drop_games_table)
         
-        # create members table
         create_table(conn, sql_create_members_table)
 
-        # create settings table
         create_table(conn, sql_create_properties_table)
 
-        # create games table
         create_table(conn, sql_create_games_table)
 
         set_properties(conn, k_regular_properties)
+
         set_properties(conn, k_tournament_properties)
     else:
         print("Error! cannot create the database connection.")
