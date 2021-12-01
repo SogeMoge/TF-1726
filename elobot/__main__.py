@@ -10,6 +10,7 @@ from discord.ext import commands
 from discord.utils import get
 from discord.commands import Option
 from discord.commands import permissions
+from discord.ui import Button, View
 
 bot = discord.Bot()
 load_dotenv()
@@ -200,24 +201,36 @@ async def on_ready():
 
 @bot.slash_command(guild_ids=[test_guild_id, russian_guild_id])  # create a slash command for the supplied guilds
 async def info(ctx):
-    """Useful X-Wing resourses"""  # the command description can be supplied as the docstring
-    embed = discord.Embed(title="X-Wing resources", colour=discord.Colour(0xFFD700))
-    embed.add_field(name="Actual Rules documents", value="https://www.atomicmassgames.com/xwing-documents", inline=True)
-    embed.add_field(name="Official AMG Rules Forum", value="http://bit.ly/xwingrulesforum", inline=False)
-    embed.add_field(name="Buying guide", value="https://bit.ly/2WzBq0c", inline=False)
-    embed.add_field(name="Black Market A68", value="https://bit.ly/3DLZuhe")
-    # embed.set_footer(text=ctx.author.name, icon_url = ctx.author.avatar_url)
-    await ctx.respond(embed=embed)
+    """Полезные ресурсы для X-Wing"""  # the command description can be supplied as the docstring
+    # embed = discord.Embed(title="X-Wing resources", colour=discord.Colour(0xFFD700))
+    # embed.add_field(name="Actual Rules documents", value="https://www.atomicmassgames.com/xwing-documents", inline=True)
+    # embed.add_field(name="Official AMG Rules Forum", value="http://bit.ly/xwingrulesforum", inline=False)
+    # embed.add_field(name="Buying guide", value="https://bit.ly/2WzBq0c", inline=False)
+    # embed.add_field(name="Black Market A68", value="https://bit.ly/3DLZuhe")
+    # # embed.set_footer(text=ctx.author.name, icon_url = ctx.author.avatar_url)
+    # await ctx.respond(embed=embed)
+    button1 = Button(label="Rules Referense", url="https://www.atomicmassgames.com/xwing-documents")
+    button2 = Button(label="Официальный форум правил", url="http://bit.ly/xwingrulesforum")
+    button3 = Button(label="Гид по покупке фракций", url="https://bit.ly/2WzBq0c")
+    button4 = Button(label="Black Market A68", url="https://bit.ly/3DLZuhe")
+    view = View(button1,button2,button3,button4)
+    await ctx.respond("Полезные ссылки:", view=view)
 
 @bot.slash_command(guild_ids=[test_guild_id, russian_guild_id])  # create a slash command for the supplied guilds
 async def builders(ctx):
-    """X-Wing community builders"""  # the command description can be supplied as the docstring
-    embed = discord.Embed(title="X-Wing builders", colour=discord.Colour(0xFFD700))
-    embed.add_field(name="YASB 2.0 (Web)", value="https://raithos.github.io", inline=True)
-    embed.add_field(name="Launch Bay Next (Web)", value="https://launchbaynext.app", inline=False)
-    embed.add_field(name="Launch Bay Next (Android)", value="https://bit.ly/3bP3GjG", inline=False)
-    embed.add_field(name="Launch Bay Next (iOS)", value="https://apple.co/3CToHVX")
-    await ctx.respond(embed=embed)
+    """Электронные билдеры X-Wing от комьюнити"""  # the command description can be supplied as the docstring
+    # embed = discord.Embed(title="X-Wing builders", colour=discord.Colour(0xFFD700))
+    # embed.add_field(name="YASB 2.0 (Web)", value="https://raithos.github.io", inline=True)
+    # embed.add_field(name="Launch Bay Next (Web)", value="https://launchbaynext.app", inline=False)
+    # embed.add_field(name="Launch Bay Next (Android)", value="https://bit.ly/3bP3GjG", inline=False)
+    # embed.add_field(name="Launch Bay Next (iOS)", value="https://apple.co/3CToHVX")
+    # await ctx.respond(embed=embed)
+    button1 = Button(label="YASB 2.0 (Web)", url="https://raithos.github.io")
+    button2 = Button(label="Launch Bay Next (Web)", url="https://launchbaynext.app")
+    button3 = Button(label="Launch Bay Next (Android)", url="https://bit.ly/3bP3GjG")
+    button4 = Button(label="Launch Bay Next (iOS)", url="https://apple.co/3CToHVX")
+    view = View(button1,button2,button3,button4)
+    await ctx.respond("Электронные билдеры:", view=view)
 
 #########################                   #########################
 #########################  LEAGUE COMMANDS  #########################
