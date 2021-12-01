@@ -15,6 +15,11 @@ bot = discord.Bot()
 load_dotenv()
 token = os.environ.get("DISCORD_TOKEN")
 
+results_channel_id = int(os.environ.get("RESULTS_CHANNEL_ID"))
+test_guild_id = int(os.environ.get("TEST_GUILD_ID"))
+russian_guild_id = int(os.environ.get("RUSSIAN_GUILD_ID"))
+db_admin_id = int(os.environ.get("DB_ADMIN_ID"))
+
 def create_connection(db_file):
     """ create a database connection to the SQLite database
         specified by db_file
@@ -128,6 +133,30 @@ def select_k_tournament(conn):
 
     return cur.fetchone()[0]
 
+def select_mutual_games_property(conn):
+    """
+    Query mutual games
+    :param conn: the Connection object
+    :return:
+    """
+    cur = conn.cursor()
+    cur.execute("SELECT int_value FROM properties WHERE property_name = 'mutual_games'")
+
+    return cur.fetchone()[0]
+
+def select_mutual_games_count(conn, winner_id, looser_id):
+    """
+    Query mutual games
+    :param conn: the Connection object
+    :param winner_id:
+    :param looser_id:
+    :return:
+    """
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(DISTINCT game_id) FROM games WHERE tournament = 0 AND ((winner_id = ? AND looser_id = ?) OR (winner_id = ? AND looser_id = ?));", (winner_id, looser_id, looser_id, winner_id))
+
+    return cur.fetchone()[0]
+
 def select_curr_date(conn):
     """
     Query date
@@ -160,17 +189,16 @@ conn = create_connection(db)
 @bot.event
 async def on_ready():
         print(f"{bot.user} is ready!")
-
 #########################                 #########################
 #########################  INFO COMMANDS  #########################
 #########################                 #########################
 
-# @bot.slash_command(guild_ids=[747905921115619399])  # create a slash command for the supplied guilds
+# @bot.slash_command(guild_ids=[test_guild_id])  # create a slash command for the supplied guilds
 # async def hello(ctx):
 #     """Say hello to the bot"""  # the command description can be supplied as the docstring
 #     await ctx.respond(f"Hello, {ctx.author.display_name}!")
 
-@bot.slash_command(guild_ids=[747905921115619399,433922248802304023])  # create a slash command for the supplied guilds
+@bot.slash_command(guild_ids=[test_guild_id, russian_guild_id])  # create a slash command for the supplied guilds
 async def info(ctx):
     """Useful X-Wing resourses"""  # the command description can be supplied as the docstring
     embed = discord.Embed(title="X-Wing resources", colour=discord.Colour(0xFFD700))
@@ -181,7 +209,7 @@ async def info(ctx):
     # embed.set_footer(text=ctx.author.name, icon_url = ctx.author.avatar_url)
     await ctx.respond(embed=embed)
 
-@bot.slash_command(guild_ids=[747905921115619399,433922248802304023])  # create a slash command for the supplied guilds
+@bot.slash_command(guild_ids=[test_guild_id, russian_guild_id])  # create a slash command for the supplied guilds
 async def builders(ctx):
     """X-Wing community builders"""  # the command description can be supplied as the docstring
     embed = discord.Embed(title="X-Wing builders", colour=discord.Colour(0xFFD700))
@@ -195,7 +223,7 @@ async def builders(ctx):
 #########################  LEAGUE COMMANDS  #########################
 #########################                   #########################
 
-@bot.slash_command(guild_ids=[747905921115619399], default_permission=False)
+@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
 @permissions.has_role("league admin")
 async def register(ctx, member: discord.Member):
     """Give league member role to a mentioned user."""
@@ -219,14 +247,41 @@ async def register(ctx, member: discord.Member):
 #    except: # simple error handler if bot tries to insert duplicated value
 #        await ctx.respond(f"It seems that registration for {member.display_name} has failed")
 
-@bot.slash_command(guild_ids=[747905921115619399], default_permission=False)
+@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
 @permissions.has_role("league")
 async def results(ctx, winner: discord.Member, winner_points, looser: discord.Member, looser_points):
     """Submit regular leage game results."""
-    sql_get_k = f"""SELECT int_value FROM properties WHERE property_name = 'k_regular';"""
-    
-    #pt = points
-    
+    role_check = discord.utils.get(ctx.guild.roles, name="league")
+
+    mutual_games_property = select_mutual_games_property(conn)
+    mutual_games_count = select_mutual_games_count(conn, winner.id, looser.id)
+
+    if ctx.channel.id != results_channel_id:
+        embed = discord.Embed(colour=discord.Colour(0xFF0000))
+        embed.add_field(name="ERROR", value='Wrong channel!', inline=True)
+        await ctx.respond(embed=embed)
+        return
+    elif ctx.author.id not in [winner.id, looser.id]:
+        embed = discord.Embed(colour=discord.Colour(0xFF0000))
+        embed.add_field(name="ERROR", value='You can not enter results for others!', inline=True)
+        await ctx.respond(embed=embed)
+        return
+    elif role_check not in winner.roles:
+        embed = discord.Embed(colour=discord.Colour(0xFF0000))
+        embed.add_field(name="ERROR", value='{} is not a league member!'.format(winner.display_name), inline=True)
+        await ctx.respond(embed=embed)
+        return
+    elif role_check not in looser.roles:
+        embed = discord.Embed(colour=discord.Colour(0xFF0000))
+        embed.add_field(name="ERROR", value='{} is not a league member!'.format(looser.display_name), inline=True)
+        await ctx.respond(embed=embed)
+        return
+    elif mutual_games_count >= mutual_games_property:
+        embed = discord.Embed(colour=discord.Colour(0xFF0000))
+        embed.add_field(name="ERROR", value='{} and {} have played {} games already!'.format(winner.display_name, looser.display_name, mutual_games_property), inline=True)
+        await ctx.respond(embed=embed)
+        return
+
     # K = execute_sql(conn, sql_get_k)
     K = select_k_regular(conn)
     
@@ -255,19 +310,36 @@ async def results(ctx, winner: discord.Member, winner_points, looser: discord.Me
     curr_date = select_curr_date(conn)
     #insert game entry
     game_result = (winner.id, winner_points, Rna_diff, looser.id, looser_points, Rnop_diff, curr_date);
-    project_id = insert_regular_win(conn, game_result)
+    game_id = insert_regular_win(conn, game_result)
 
     update_member(conn, (Rna, winner.id))
     update_member(conn, (Rnop, looser.id))
+    
+    # Pretty output of updated rating for participant
+    embed_win = discord.Embed(title="Updated League profile", colour=discord.Colour(0x6790a7))
+    embed_win.add_field(name="Game_id", value=game_id, inline=False)
+    embed_win.add_field(name="Old Rating", value=Ra, inline=True)
+    embed_win.add_field(name="Diff", value=Rna_diff, inline=True)
+    embed_win.add_field(name="New Rating", value=Rna, inline=True)
+    embed_win.set_footer(text=winner.display_name, icon_url = winner.display_avatar)
 
-    Ra = select_rating_sql(conn, winner.id)
-    Rop = select_rating_sql(conn, looser.id)
+    embed_loss = discord.Embed(title="Updated League profile", colour=discord.Colour(0x6790a7))
+    embed_loss.add_field(name="Game_id", value=game_id, inline=False)
+    embed_loss.add_field(name="Old Rating", value=Rop, inline=True)
+    embed_loss.add_field(name="Diff", value=Rnop_diff, inline=True)
+    embed_loss.add_field(name="New Rating", value=Rnop, inline=True)
+    embed_loss.set_footer(text=looser.display_name, icon_url = looser.display_avatar)
 
-    await ctx.respond(f"Results submitted!\n {winner.display_name} is now at {Ra}\n{looser.display_name} is now {Rop}")
+    await ctx.send(embeds=[embed_win,embed_loss])
+        
+    msg = await ctx.respond(f"{winner.display_name} won with {winner_points} - {looser_points} score!")
+            # add confirmation reactions to game results message
+    # for reaction in reactions:
+    #     await msg.add_reaction(reaction)
 
 
 
-# @bot.slash_command(guild_ids=[747905921115619399])
+# @bot.slash_command(guild_ids=[test_guild_id])
 # async def date(ctx):
 #     date = subprocess.Popen("date", stdout=subprocess.PIPE, universal_newlines=True, shell=True)
 #     output = date.stdout.read()
@@ -316,14 +388,16 @@ k_regular_properties = ("k_regular", 16, None, None, None)
 
 k_tournament_properties = ("k_tournament", 32, None, None, None)
 
+num_mutual_games = ("mutual_games", 10, None, None, None)
+
 
 
 ##########################             ##########################
 ########################## DB COMMANDS ##########################
 ##########################             ##########################
 
-@bot.slash_command(guild_ids=[747905921115619399], default_permission=False)
-@permissions.permission(user_id=218988865631944705, permission=True)
+@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
+@permissions.permission(user_id=db_admin_id, permission=True)
 async def create_tables(ctx):
     """Create tables first time"""
     if conn is not None:
@@ -337,13 +411,15 @@ async def create_tables(ctx):
         set_properties(conn, k_regular_properties)
 
         set_properties(conn, k_tournament_properties)
+
+        set_properties(conn, num_mutual_games)
     else:
         print("Error! cannot create the database connection.")
 
     await ctx.respond(f"Tables created!")
 
-@bot.slash_command(guild_ids=[747905921115619399], default_permission=False)
-@permissions.permission(user_id=218988865631944705, permission=True)
+@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
+@permissions.permission(user_id=db_admin_id, permission=True)
 async def recreate_tables(ctx):
     """Drop and Create tables for fresh start"""
     if conn is not None:
@@ -363,9 +439,16 @@ async def recreate_tables(ctx):
         set_properties(conn, k_regular_properties)
 
         set_properties(conn, k_tournament_properties)
+
+        set_properties(conn, num_mutual_games)
+
     else:
         print("Error! cannot create the database connection.")
 
     await ctx.respond(f"Tables recreated!")    
 
+# SELECT * 
+#    FROM games 
+#    WHERE game_date BETWEEN "2010-01-01" AND "2013-01-01"
+#    WHERE game_date > '2021-12-01'
 bot.run(token)
