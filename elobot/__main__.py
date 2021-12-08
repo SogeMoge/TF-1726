@@ -225,17 +225,12 @@ def rating(win, K, R, E):
     """
     Compute new rating
     :param win: 1 for win, 0 for loss
-<<<<<<< HEAD
     :param K: K property extracted from DB
-=======
-    "param K: K property extracted from DB
->>>>>>> 8349da66ed9e198d82d52e4b49f44cabea218a38
     :param R: current rating of player
     :param E: delta poins of player
     """
     Rn = round( R + K * (win - E), 2)
     return Rn
-<<<<<<< HEAD
 
 def get_member_stats(conn, member_id):
     """
@@ -286,8 +281,6 @@ def get_member_stats(conn, member_id):
     cur.execute(sql)
     rows = cur.fetchall()
     return rows        
-=======
->>>>>>> 8349da66ed9e198d82d52e4b49f44cabea218a38
 
 db = os.environ.get("DATABASE")
 conn = create_connection(db)
@@ -482,7 +475,6 @@ async def results(ctx, winner: discord.Member, winner_points, looser: discord.Me
 async def tournament_results(ctx, winner: discord.Member, winner_points, looser: discord.Member, looser_points):
     """Submit tournament leage game results."""
     role_check = discord.utils.get(ctx.guild.roles, name="league")
-<<<<<<< HEAD
 
     if ctx.channel.id != results_channel_id:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
@@ -515,40 +507,6 @@ async def tournament_results(ctx, winner: discord.Member, winner_points, looser:
     Rop = select_rating_sql(conn, looser.id) 
     ### calculating ELO ###
 
-=======
-
-    if ctx.channel.id != results_channel_id:
-        embed = discord.Embed(colour=discord.Colour(0xFF0000))
-        embed.add_field(name="ERROR", value='Wrong channel!', inline=True)
-        await ctx.respond(embed=embed)
-        return
-    elif role_check not in winner.roles:
-        embed = discord.Embed(colour=discord.Colour(0xFF0000))
-        embed.add_field(name="ERROR", value='{} is not a league member!'.format(winner.display_name), inline=True)
-        await ctx.respond(embed=embed)
-        return
-    elif role_check not in looser.roles:
-        embed = discord.Embed(colour=discord.Colour(0xFF0000))
-        embed.add_field(name="ERROR", value='{} is not a league member!'.format(looser.display_name), inline=True)
-        await ctx.respond(embed=embed)
-        return
-
-    # K = execute_sql(conn, sql_get_k)
-    K = select_k_tournament(conn)
-    
-    # game will not count for mutual games
-    tournament = 1
-    
-    ## extract current rating for message winner
-    # winner rating
-    Ra = select_rating_sql(conn, winner.id)
-
-    ## extract current rating for mentioned looser
-    # looser rating
-    Rop = select_rating_sql(conn, looser.id) 
-    ### calculating ELO ###
-
->>>>>>> 8349da66ed9e198d82d52e4b49f44cabea218a38
     ## gathered delta points from current game result
     # Ea = round( 1 / (1 + 10 ** ((Rop - Ra) / 400)), 2)
     Ea = delta_points(Rop, Ra)
