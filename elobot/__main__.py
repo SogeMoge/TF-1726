@@ -451,7 +451,7 @@ async def top(ctx):
     for row in cur.execute(f'SELECT member_name||" - "||rating FROM members WHERE member_id IN ({member_string}) ORDER BY rating DESC;'):
         n = n + 1
         embed.add_field(name="\u200b", value='{} - {}'.format(n, row[0]), inline=False)
-    await ctx.respond(f"Top resuts, played at least 5 games")
+    await ctx.respond(f"Top resuts, played at least {min_games} games")
 
     button = Button(label="Update", style=discord.ButtonStyle.primary, emoji=update_reaction)
 
