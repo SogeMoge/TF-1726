@@ -11,7 +11,7 @@ from discord.ext import commands
 from discord.utils import get
 from discord.commands import Option
 from discord.commands import permissions
-from discord.ui import Button, View
+from discord.ui import Button, View, Select
 
 intents = discord.Intents().all()
 bot = discord.Bot(intents=intents)
@@ -318,7 +318,20 @@ date = date.today()
 
 @bot.event
 async def on_ready():
+        bot.add_view(UpdateView())
         print(f"{bot.user} is ready!")
+
+class UpdateView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+    
+    @discord.ui.button(custom_id="update1", label="Update", style=discord.ButtonStyle.primary, emoji=update_reaction)
+    async def button_callback(self, button, interaction):
+        await interaction.response.edit_message(content="view updated")
+
+@bot.slash_command(guild_ids=[test_guild_id])  # create a slash command for the supplied guilds
+async def test(ctx):
+    await ctx.respond("original view", view=UpdateView())
 #########################                 #########################
 #########################  INFO COMMANDS  #########################
 #########################                 #########################
