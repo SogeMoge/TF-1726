@@ -417,7 +417,6 @@ class UpdateView(discord.ui.View):
 
 @bot.event
 async def on_ready():
-<<<<<<< HEAD
     bot.add_view(UpdateView())
     print(f"{bot.user} is ready!")
 
@@ -432,22 +431,6 @@ async def on_ready():
 #         await message.channel.send("hi")
 
 
-=======
-        bot.add_view(UpdateView())
-        print(f"{bot.user} is ready!")
-
-class UpdateView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
-    
-    @discord.ui.button(custom_id="update1", label="Update", style=discord.ButtonStyle.primary, emoji=update_reaction)
-    async def button_callback(self, button, interaction):
-        await interaction.response.edit_message(content="view updated")
-
-@bot.slash_command(guild_ids=[test_guild_id])  # create a slash command for the supplied guilds
-async def test(ctx):
-    await ctx.respond("original view", view=UpdateView())
->>>>>>> 7912a113eaf3b3c8d4df6442f21e129bcc569e53
 #########################                 #########################
 #########################  INFO COMMANDS  #########################
 #########################                 #########################
