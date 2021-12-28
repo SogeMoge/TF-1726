@@ -11,20 +11,28 @@ from discord.ext import commands
 from discord.utils import get
 from discord.commands import Option
 from discord.commands import permissions
-from discord.ui import Button, View
+from discord.ui import Button, View, Select
 
 intents = discord.Intents().all()
 bot = discord.Bot(intents=intents)
 load_dotenv()
 token = os.environ.get("DISCORD_TOKEN")
 
+
 results_channel_id = int(os.environ.get("RESULTS_CHANNEL_ID"))
 test_guild_id = int(os.environ.get("TEST_GUILD_ID"))
 russian_guild_id = int(os.environ.get("RUSSIAN_GUILD_ID"))
 db_admin_id = int(os.environ.get("DB_ADMIN_ID"))
+db = os.environ.get("DATABASE")
+
+
+update_reaction = "\U0001f504"  # circle arrows
+accept_reactions = ["\U00002705", "\U0000274e"]  # check and cross marks
+date = date.today()
+
 
 def create_connection(db_file):
-    """ create a database connection to the SQLite database
+    """create a database connection to the SQLite database
         specified by db_file
     :param db_file: database file
     :return: Connection object or None
@@ -38,8 +46,12 @@ def create_connection(db_file):
 
     return conn
 
+
+conn = create_connection(db)
+
+
 def create_table(conn, create_table_sql):
-    """ create a table from the create_table_sql statement
+    """create a table from the create_table_sql statement
     :param conn: Connection object
     :param create_table_sql: a CREATE TABLE statement
     :return:
@@ -50,8 +62,9 @@ def create_table(conn, create_table_sql):
     except Error as e:
         print(e)
 
+
 def drop_table(conn, drop_table_sql):
-    """ drop a table from the drop_table_sql statement
+    """drop a table from the drop_table_sql statement
     :param conn: Connection object
     :param create_table_sql: a DROP TABLE statement
     :return:
@@ -62,8 +75,9 @@ def drop_table(conn, drop_table_sql):
     except Error as e:
         print(e)
 
+
 def insert_sql(conn, sql_querry):
-    """ execute querry from sql_querry statement
+    """execute querry from sql_querry statement
     :param conn: Connection object
     :param sql_querry: a SQL statement
     :return:
@@ -74,6 +88,7 @@ def insert_sql(conn, sql_querry):
     except Error as e:
         print(e)
 
+
 def insert_regular_win(conn, game_result):
     """
     Submit a new game in the games table
@@ -81,12 +96,13 @@ def insert_regular_win(conn, game_result):
     :param win_result:
     :return: game id
     """
-    sql = ''' INSERT INTO games (winner_id,winner_score,winner_rating_diff,looser_id,looser_score,looser_rating_diff,game_date)
-              VALUES(?,?,?,?,?,?,?) '''
+    sql = """ INSERT INTO games (winner_id,winner_score,winner_rating_diff,looser_id,looser_score,looser_rating_diff,game_date)
+              VALUES(?,?,?,?,?,?,?) """
     cur = conn.cursor()
     cur.execute(sql, game_result)
     conn.commit()
     return cur.lastrowid
+
 
 def insert_tournament_win(conn, game_result):
     """
@@ -95,12 +111,39 @@ def insert_tournament_win(conn, game_result):
     :param win_result:
     :return: game id
     """
-    sql = ''' INSERT INTO games (winner_id,winner_score,winner_rating_diff,looser_id,looser_score,looser_rating_diff,tournament,game_date)
-              VALUES(?,?,?,?,?,?,?,?) '''
+    sql = """ INSERT INTO games (winner_id,winner_score,winner_rating_diff,looser_id,looser_score,looser_rating_diff,tournament,game_date)
+              VALUES(?,?,?,?,?,?,?,?) """
     cur = conn.cursor()
     cur.execute(sql, game_result)
     conn.commit()
     return cur.lastrowid
+
+
+def insert_fun_event_win(conn, game_result):
+    """
+    Submit a new game in the games table
+    :param conn:
+    :param win_result:
+    """
+    sql = """ INSERT INTO games (winner_id,winner_score,winner_rating_diff,looser_id,looser_score,looser_rating_diff,fun_event,game_date)
+              VALUES(?,?,?,?,?,?,?,?) """
+    cur = conn.cursor()
+    cur.execute(sql, game_result)
+    conn.commit()
+
+
+def insert_fun_event_participation(conn, game_result):
+    """
+    Submit a new game in the games table
+    :param conn:
+    :param win_result:
+    """
+    sql = """ INSERT INTO games (winner_id,winner_score,winner_rating_diff,looser_id,looser_score,looser_rating_diff,fun_event,game_date)
+              VALUES(?,?,?,?,?,?,?,?) """
+    cur = conn.cursor()
+    cur.execute(sql, game_result)
+    conn.commit()
+
 
 def update_member(conn, rating):
     """
@@ -109,12 +152,13 @@ def update_member(conn, rating):
     :param rating:
     :return: project id
     """
-    sql = ''' UPDATE members
+    sql = """ UPDATE members
               SET rating = ?
-              WHERE member_id = ?'''
+              WHERE member_id = ?"""
     cur = conn.cursor()
     cur.execute(sql, rating)
     conn.commit()
+
 
 def select_rating_sql(conn, member_id):
     """
@@ -124,9 +168,12 @@ def select_rating_sql(conn, member_id):
     :return:
     """
     cur = conn.cursor()
-    cur.execute("SELECT rating FROM members WHERE member_id=?", (member_id,))
+    cur.execute(
+        "SELECT rating FROM members WHERE member_id=?", (member_id,)
+    )
 
     return cur.fetchone()[0]
+
 
 def select_k_regular(conn):
     """
@@ -135,9 +182,12 @@ def select_k_regular(conn):
     :return:
     """
     cur = conn.cursor()
-    cur.execute("SELECT int_value FROM properties WHERE property_name = 'k_regular'")
+    cur.execute(
+        "SELECT int_value FROM properties WHERE property_name = 'k_regular'"
+    )
 
     return cur.fetchone()[0]
+
 
 def select_k_tournament(conn):
     """
@@ -146,9 +196,12 @@ def select_k_tournament(conn):
     :return:
     """
     cur = conn.cursor()
-    cur.execute("SELECT int_value FROM properties WHERE property_name = 'k_tournament'")
+    cur.execute(
+        "SELECT int_value FROM properties WHERE property_name = 'k_tournament'"
+    )
 
     return cur.fetchone()[0]
+
 
 def select_mutual_games_property(conn):
     """
@@ -157,9 +210,12 @@ def select_mutual_games_property(conn):
     :return:
     """
     cur = conn.cursor()
-    cur.execute("SELECT int_value FROM properties WHERE property_name = 'mutual_games'")
+    cur.execute(
+        "SELECT int_value FROM properties WHERE property_name = 'mutual_games'"
+    )
 
     return cur.fetchone()[0]
+
 
 def select_minimal_games_property(conn):
     """
@@ -168,9 +224,12 @@ def select_minimal_games_property(conn):
     :return:
     """
     cur = conn.cursor()
-    cur.execute("SELECT int_value FROM properties WHERE property_name = 'minimal_games'")
+    cur.execute(
+        "SELECT int_value FROM properties WHERE property_name = 'minimal_games'"
+    )
 
     return cur.fetchone()[0]
+
 
 def select_mutual_games_played(conn, author_id, member_id):
     """
@@ -184,10 +243,12 @@ def select_mutual_games_played(conn, author_id, member_id):
     sql = f""" SELECT COUNT(game_id)
                FROM games 
                WHERE tournament = 0
+               AND fun_event = 0
                AND ((winner_id = {author_id} AND looser_id = {member_id}) OR (winner_id = {member_id} AND looser_id = {author_id}));
            """
     cur.execute(sql)
     return cur.fetchone()[0]
+
 
 def select_rating_position(conn, member_id):
     """
@@ -195,14 +256,15 @@ def select_rating_position(conn, member_id):
     :param member_id: author of the command
     """
     cur = conn.cursor()
-    sql = f''' SELECT COUNT(member_id) 
+    sql = f""" SELECT COUNT(member_id) 
               FROM members 
               WHERE rating >= (SELECT rating 
                                FROM members 
                                WHERE member_id = {member_id})
-              '''
+              """
     cur.execute(sql)
     return cur.fetchone()[0]
+
 
 def select_curr_date(conn):
     """
@@ -215,6 +277,7 @@ def select_curr_date(conn):
 
     return cur.fetchone()[0]
 
+
 def set_properties(conn, properties):
     """
     Create a new project into the projects table
@@ -222,12 +285,13 @@ def set_properties(conn, properties):
     :param project:
     :return: project id
     """
-    sql = ''' INSERT INTO properties(property_name,int_value,float_value,char_value,date_value)
-              VALUES(?,?,?,?,?) '''
+    sql = """ INSERT INTO properties(property_name,int_value,float_value,char_value,date_value)
+              VALUES(?,?,?,?,?) """
     cur = conn.cursor()
     cur.execute(sql, properties)
     conn.commit()
     return cur.lastrowid
+
 
 def delta_points(opponent_rating, member_rating):
     """
@@ -235,8 +299,11 @@ def delta_points(opponent_rating, member_rating):
     :param opponent_rating: current opponent rating
     :param member_rating: current player ratng
     """
-    E = round( 1 / (1 + 10 ** ((opponent_rating - member_rating) / 400)), 2)
+    E = round(
+        1 / (1 + 10 ** ((opponent_rating - member_rating) / 400)), 2
+    )
     return E
+
 
 def rating(win, K, R, E):
     """
@@ -246,79 +313,124 @@ def rating(win, K, R, E):
     :param R: current rating of player
     :param E: delta poins of player
     """
-    Rn = round( R + K * (win - E), 2)
+    Rn = round(R + K * (win - E), 2)
     return Rn
+
 
 def get_member_stats(conn, member_id):
     """
     Select and print league statistics for member
     "param member_id: get stats for ctx.author.id
     """
-    # sql = f''' SELECT m.member_id, m.rating, a.cnt_win , b.cnt_loose, round(cast(a.cnt_win as REAL)/(a.cnt_win + b.cnt_loose)*100,0)
-    #            from members m
-    #            left join
-    #            (select m.member_id, count(g.winner_id) cnt_win
-    #            from  members m 
-    #            left JOIN games g ON m.member_id=g.winner_id
-    #            group by m.member_id
-    #            ) a on m.member_id = a.member_id
-    #            left join
-    #            (select m.member_id, count(g.looser_id) cnt_loose
-    #            from  members m 
-    #            left JOIN games g ON m.member_id=g.looser_id
-    #            group by m.member_id
-    #            ) b on m.member_id = b.member_id
-    #            where 1=1
-    #            and m.member_id={member_id}; '''
-    sql_win = f''' SELECT count(g.winner_id) cnt_win
+    sql_win = f""" SELECT count(g.winner_id) cnt_win
                    FROM  members m 
                    LEFT JOIN games g ON m.member_id=g.winner_id
                    WHERE 1=1
-                   AND m.member_id={member_id} '''
+                   AND m.member_id={member_id} """
     cur_w = conn.cursor()
     cur_w.execute(sql_win)
     cnt_win = cur_w.fetchone()[0]
-   
 
-    sql_loss = f'''SELECT count(g.looser_id) cnt_loose
+    sql_loss = f"""SELECT count(g.looser_id) cnt_loose
                    FROM  members m 
                    LEFT JOIN games g ON m.member_id=g.looser_id
                    WHERE 1=1
-                   AND m.member_id={member_id} '''
+                   AND m.member_id={member_id} """
     cur_l = conn.cursor()
     cur_l.execute(sql_loss)
     cnt_loss = cur_l.fetchone()[0]
-    
-    if(cnt_win + cnt_loss > 0):
+
+    if cnt_win + cnt_loss > 0:
         winrate = int(round(cnt_win / (cnt_win + cnt_loss) * 100, 0))
 
-        sql = f''' SELECT member_id, rating, {cnt_win} , {cnt_loss}, {winrate}
+        sql = f""" SELECT member_id, rating, {cnt_win} , {cnt_loss}, {winrate}
                    from members
                    where 1=1
-                   and member_id={member_id}; '''
+                   and member_id={member_id}; """
         cur = conn.cursor()
         cur.execute(sql)
         rows = cur.fetchall()
         return rows
     else:
-        sql = f''' SELECT member_id, rating, {cnt_win} , {cnt_loss}, 0
+        sql = f""" SELECT member_id, rating, {cnt_win} , {cnt_loss}, 0
                    from members
                    where 1=1
-                   and member_id={member_id}; '''
+                   and member_id={member_id}; """
         cur = conn.cursor()
         cur.execute(sql)
         rows = cur.fetchall()
-        return rows        
+        return rows
 
-db = os.environ.get("DATABASE")
-conn = create_connection(db)
 
-update_reaction = '\U0001f504' # circle arrows
-date = date.today()
+class UpdateView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(
+        custom_id="update1",
+        label="Update",
+        style=discord.ButtonStyle.primary,
+        emoji=update_reaction,
+    )
+    async def button_callback(self, button, interaction):
+        embed = discord.Embed(
+            title="League leaderboard", colour=discord.Colour(0xFFD700)
+        )
+        min_games = select_minimal_games_property(conn)
+
+        n = 0
+        cur = conn.cursor()
+        for row in cur.execute(
+            f"""SELECT m.member_name, m.rating, a.cnt_win, b.cnt_loose
+                from members m
+                left join
+                (select m.member_id, count(g.winner_id) cnt_win
+                from  members m 
+                left JOIN games g ON m.member_id=g.winner_id
+                group by m.member_id
+                ) a on m.member_id = a.member_id
+                left join
+                (select m.member_id, count(g.looser_id) cnt_loose
+                from  members m 
+                left JOIN games g ON m.member_id=g.looser_id
+                group by m.member_id
+                ) b on m.member_id = b.member_id
+                where 1=1
+                AND cnt_win+cnt_loose>={min_games}
+                ;"""
+        ):
+            n = n + 1
+            embed.add_field(
+                name="\u200b",
+                value="{} - {} | R:{} W:{} L:{}".format(
+                    n, row[0], row[1], row[2], row[3]
+                ),
+                inline=False,
+            )
+        min_games = select_minimal_games_property(conn)
+        await interaction.response.edit_message(
+            content=f"Top resuts, played at least {min_games} game(s)\nUpdated from {date}",
+            embed=embed,
+            view=UpdateView(),
+        )
+
 
 @bot.event
 async def on_ready():
-        print(f"{bot.user} is ready!")
+    bot.add_view(UpdateView())
+    print(f"{bot.user} is ready!")
+
+
+# @bot.event
+# async def on_message(message):
+
+#     if (
+#         bot.user.mentioned_in(message)
+#         and message.mention_everyone is False
+#     ):
+#         await message.channel.send("hi")
+
+
 #########################                 #########################
 #########################  INFO COMMANDS  #########################
 #########################                 #########################
@@ -328,7 +440,10 @@ async def on_ready():
 #     """Say hello to the bot"""  # the command description can be supplied as the docstring
 #     await ctx.respond(f"Hello, {ctx.author.display_name}!")
 
-@bot.slash_command(guild_ids=[test_guild_id, russian_guild_id])  # create a slash command for the supplied guilds
+
+@bot.slash_command(
+    guild_ids=[test_guild_id, russian_guild_id]
+)  # create a slash command for the supplied guilds
 async def info(ctx):
     """Useful X-Wing resources"""  # the command description can be supplied as the docstring
     # embed = discord.Embed(title="X-Wing resources", colour=discord.Colour(0xFFD700))
@@ -338,14 +453,26 @@ async def info(ctx):
     # embed.add_field(name="Black Market A68", value="https://bit.ly/3DLZuhe")
     # # embed.set_footer(text=ctx.author.name, icon_url = ctx.author.avatar_url)
     # await ctx.respond(embed=embed)
-    button1 = Button(label="Rules Referense", url="https://www.atomicmassgames.com/xwing-documents")
-    button2 = Button(label="AMG Rules Forum", url="http://bit.ly/xwingrulesforum")
-    button3 = Button(label="Buying guide per factions", url="https://bit.ly/2WzBq0c")
-    button4 = Button(label="Black Market A68", url="https://bit.ly/3DLZuhe")
-    view = View(button1,button2,button3,button4)
+    button1 = Button(
+        label="Rules Referense",
+        url="https://www.atomicmassgames.com/xwing-documents",
+    )
+    button2 = Button(
+        label="AMG Rules Forum", url="http://bit.ly/xwingrulesforum"
+    )
+    button3 = Button(
+        label="Buying guide per factions", url="https://bit.ly/2WzBq0c"
+    )
+    button4 = Button(
+        label="Black Market A68", url="https://bit.ly/3DLZuhe"
+    )
+    view = View(button1, button2, button3, button4)
     await ctx.respond("Useful links:", view=view)
 
-@bot.slash_command(guild_ids=[test_guild_id, russian_guild_id])  # create a slash command for the supplied guilds
+
+@bot.slash_command(
+    guild_ids=[test_guild_id, russian_guild_id]
+)  # create a slash command for the supplied guilds
 async def builders(ctx):
     """Squad Builders for X-Wing from comunity"""  # the command description can be supplied as the docstring
     # embed = discord.Embed(title="X-Wing builders", colour=discord.Colour(0xFFD700))
@@ -354,27 +481,41 @@ async def builders(ctx):
     # embed.add_field(name="Launch Bay Next (Android)", value="https://bit.ly/3bP3GjG", inline=False)
     # embed.add_field(name="Launch Bay Next (iOS)", value="https://apple.co/3CToHVX")
     # await ctx.respond(embed=embed)
-    button1 = Button(label="YASB 2.0 (Web)", url="https://raithos.github.io")
-    button2 = Button(label="Launch Bay Next (Web)", url="https://launchbaynext.app")
-    button3 = Button(label="Launch Bay Next (Android)", url="https://bit.ly/3bP3GjG")
-    button4 = Button(label="Launch Bay Next (iOS)", url="https://apple.co/3CToHVX")
-    view = View(button1,button2,button3,button4)
+    button1 = Button(
+        label="YASB 2.0 (Web)", url="https://raithos.github.io"
+    )
+    button2 = Button(
+        label="Launch Bay Next (Web)", url="https://launchbaynext.app"
+    )
+    button3 = Button(
+        label="Launch Bay Next (Android)", url="https://bit.ly/3bP3GjG"
+    )
+    button4 = Button(
+        label="Launch Bay Next (iOS)", url="https://apple.co/3CToHVX"
+    )
+    view = View(button1, button2, button3, button4)
     await ctx.respond("Squad Builders:", view=view)
+
 
 #########################                   #########################
 #########################  LEAGUE COMMANDS  #########################
 #########################                   #########################
 
+
 @bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
 @permissions.has_role("league admin")
 async def register(ctx, member: discord.Member):
     """Give league member role to a mentioned user."""
-#    await ctx.respond(f"Hi, {member.name} also  known as {member.display_name}")
+    #    await ctx.respond(f"Hi, {member.name} also  known as {member.display_name}")
 
-#    try:
-    role = get(ctx.guild.roles, name="league")                    # role you want to add to a user
-    if role in member.roles:                                      # checks if user has such role
-        await ctx.respond(f"{member.display_name} has league role already")
+    #    try:
+    role = get(
+        ctx.guild.roles, name="league"
+    )  # role you want to add to a user
+    if role in member.roles:  # checks if user has such role
+        await ctx.respond(
+            f"{member.display_name} has league role already"
+        )
     else:
         # Inserts row with user data into db as well as default game stat values
         insert_member_sql_querry = f"""INSERT INTO members (member_id, member_name) VALUES ({member.id}, '{member.name}');"""
@@ -383,11 +524,19 @@ async def register(ctx, member: discord.Member):
         # add league role
         await member.add_roles(role)
         # pretty outpun in chat
-        embed = discord.Embed(title=f"Registration successful\nWelcome to the league!", colour=discord.Colour(0x6790a7))
-        embed.set_footer(text=member.display_name, icon_url = member.display_avatar)
+        embed = discord.Embed(
+            title=f"Registration successful\nWelcome to the league!",
+            colour=discord.Colour(0x6790A7),
+        )
+        embed.set_footer(
+            text=member.display_name, icon_url=member.display_avatar
+        )
         await ctx.respond(embed=embed)
+
+
 #    except: # simple error handler if bot tries to insert duplicated value
 #        await ctx.respond(f"It seems that registration for {member.display_name} has failed")
+
 
 @bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
 @permissions.has_role("league")
@@ -397,37 +546,58 @@ async def status(ctx):
     # pos = 1
     rows = get_member_stats(conn, ctx.author.id)
     for row in rows:
-        embed = discord.Embed(title="League profile", colour=discord.Colour(0xFFD700))
+        embed = discord.Embed(
+            title="League profile", colour=discord.Colour(0xFFD700)
+        )
         embed.add_field(name="Position", value=pos, inline=False)
         embed.add_field(name="Rating", value=row[1], inline=False)
         embed.add_field(name="Wins", value=row[2], inline=True)
         embed.add_field(name="Losses", value=row[3], inline=True)
         embed.add_field(name="Winrate", value=f"{row[4]}%", inline=True)
-        embed.set_footer(text=ctx.author.display_name, icon_url = ctx.author.display_avatar)
+        embed.set_footer(
+            text=ctx.author.display_name,
+            icon_url=ctx.author.display_avatar,
+        )
         await ctx.respond(embed=embed)
+
 
 @bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
 @permissions.has_role("league")
 async def check(ctx, member: discord.Member):
     """Get mutual games count."""
-    #check if players have reached maximum of mutual games
+    # check if players have reached maximum of mutual games
     role_check = discord.utils.get(ctx.guild.roles, name="league")
     if role_check not in member.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
-        embed.add_field(name="ERROR", value='{} is not a league member!'.format(member.display_name), inline=True)
+        embed.add_field(
+            name="ERROR",
+            value="{} is not a league member!".format(
+                member.display_name
+            ),
+            inline=True,
+        )
         await ctx.respond(embed=embed)
         return
     gcount = select_mutual_games_played(conn, ctx.author.id, member.id)
-    
-    embed = discord.Embed(colour=discord.Colour(0x6790a7))
-    embed.add_field(name="Games played", value='{} and {} have played {} games in total, not including tournament games.'.format(ctx.author.display_name, member.display_name, gcount), inline=True)
+
+    embed = discord.Embed(colour=discord.Colour(0x6790A7))
+    embed.add_field(
+        name="Games played",
+        value="{} and {} have played {} games in total, not including tournament games.".format(
+            ctx.author.display_name, member.display_name, gcount
+        ),
+        inline=True,
+    )
     await ctx.respond(embed=embed)
+
 
 @bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
 @permissions.has_role("league admin")
 async def top(ctx):
     """Show full league leaderbord."""
-    embed = discord.Embed(title="League leaderboard", colour=discord.Colour(0xFFD700))
+    embed = discord.Embed(
+        title="League leaderboard", colour=discord.Colour(0xFFD700)
+    )
     # cursor.execute(f'SELECT COUNT(member_id) FROM rating;')
     # pnum = cursor.fetchone()[0]
     min_games = select_minimal_games_property(conn)
@@ -438,83 +608,148 @@ async def top(ctx):
         for row in rows:
             wins = row[2]
             losses = row[3]
-            if(wins + losses >= min_games):
-                member_list.append(f'{member.id}')
-    member_string = ', '.join(member_list)
+            if wins + losses >= min_games:
+                member_list.append(f"{member.id}")
+    member_string = ", ".join(member_list)
 
-    if not member_list:                           # do this!
-      await ctx.respond(f"Nobody has reached minimum number of games, play more!")
-      return
-     
+    if not member_list:  # do this!
+        await ctx.respond(
+            f"Nobody has reached minimum number of games, play more!"
+        )
+        return
+
     n = 0
     cur = conn.cursor()
-    for row in cur.execute(f'SELECT member_name||" - "||rating FROM members WHERE member_id IN ({member_string}) ORDER BY rating DESC;'):
+    for row in cur.execute(
+        f"SELECT member_name, rating FROM members WHERE member_id IN ({member_string}) ORDER BY rating DESC;"
+    ):
         n = n + 1
-        embed.add_field(name="\u200b", value='{} - {}'.format(n, row[0]), inline=False)
-    await ctx.respond(f"Top resuts, played at least {min_games} games")
+        embed.add_field(
+            name="\u200b",
+            value="{} - {}".format(n, row[0]),
+            inline=False,
+        )
+    await ctx.respond(
+        f"Top resuts, played at least {min_games} game(s)",
+        embed=embed,
+        view=UpdateView(),
+    )
 
-    button = Button(label="Update", style=discord.ButtonStyle.primary, emoji=update_reaction)
+    # button = Button(
+    #     label="Update",
+    #     style=discord.ButtonStyle.primary,
+    #     emoji=update_reaction,
+    # )
 
-    async def button_callback(interaction):
-        # await interaction.response.edit_massage(content="Updated results from {date}", embed=embed)
-        embed = discord.Embed(title="League leaderboard", colour=discord.Colour(0xFFD700))
-        n = 0
-        cur = conn.cursor()
-        for row in cur.execute(f'SELECT member_name||" - "||rating FROM members ORDER BY rating DESC;'):
-            n = n + 1
-            embed.add_field(name="\u200b", value='{} - {}'.format(n, row[0]), inline=False)
-        await interaction.response.edit_message(content=f"Updated from {date}", embed=embed, view=view)
-    
-    button.callback = button_callback
+    # async def button_callback(interaction):
+    #     # await interaction.response.edit_massage(content="Updated results from {date}", embed=embed)
+    #     embed = discord.Embed(
+    #         title="League leaderboard", colour=discord.Colour(0xFFD700)
+    #     )
+    #     n = 0
+    #     cur = conn.cursor()
+    #     for row in cur.execute(
+    #         f'SELECT member_name||" - "||rating FROM members ORDER BY rating DESC;'
+    #     ):
+    #         n = n + 1
+    #         embed.add_field(
+    #             name="\u200b",
+    #             value="{} - {}".format(n, row[0]),
+    #             inline=False,
+    #         )
+    #     await interaction.response.edit_message(
+    #         content=f"Updated from {date}", embed=embed, view=view
+    #     )
 
-    view = View(button, timeout=None)
-    await ctx.send(f"Results from {date}", embed=embed, view=view)
+    # button.callback = button_callback
+
+    # view = View(button, timeout=None)
+    # await ctx.send(f"Results from {date}", embed=embed, view=view)
+
 
 @bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
 @permissions.has_role("league")
-async def results(ctx, winner: discord.Member, winner_points, looser: discord.Member, looser_points):
+async def results(
+    ctx,
+    winner: Option(discord.Member, "@user", required=True),
+    winner_points: Option(
+        int, "Points destroyed", required=True, default=0
+    ),
+    looser: Option(discord.Member, "@user", required=True),
+    looser_points: Option(
+        int, "Points destroyed", required=True, default=0
+    ),
+):
     """Submit regular leage game results."""
     role_check = discord.utils.get(ctx.guild.roles, name="league")
 
     mutual_games_property = select_mutual_games_property(conn)
-    mutual_games_count = select_mutual_games_played(conn, winner.id, looser.id)
+    mutual_games_count = select_mutual_games_played(
+        conn, winner.id, looser.id
+    )
 
     if ctx.channel.id != results_channel_id:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
-        embed.add_field(name="ERROR", value='Wrong channel!', inline=True)
+        embed.add_field(
+            name="ERROR", value="Wrong channel!", inline=True
+        )
         await ctx.respond(embed=embed)
         return
     elif ctx.author.id not in [winner.id, looser.id]:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
-        embed.add_field(name="ERROR", value='You can not enter results for others!', inline=True)
+        embed.add_field(
+            name="ERROR",
+            value="You can not enter results for others!",
+            inline=True,
+        )
         await ctx.respond(embed=embed)
         return
     elif role_check not in winner.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
-        embed.add_field(name="ERROR", value='{} is not a league member!'.format(winner.display_name), inline=True)
+        embed.add_field(
+            name="ERROR",
+            value="{} is not a league member!".format(
+                winner.display_name
+            ),
+            inline=True,
+        )
         await ctx.respond(embed=embed)
         return
     elif role_check not in looser.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
-        embed.add_field(name="ERROR", value='{} is not a league member!'.format(looser.display_name), inline=True)
+        embed.add_field(
+            name="ERROR",
+            value="{} is not a league member!".format(
+                looser.display_name
+            ),
+            inline=True,
+        )
         await ctx.respond(embed=embed)
         return
     elif mutual_games_count >= mutual_games_property:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
-        embed.add_field(name="ERROR", value='{} and {} have played {} games already!'.format(winner.display_name, looser.display_name, mutual_games_property), inline=True)
+        embed.add_field(
+            name="ERROR",
+            value="{} and {} have played {} games already!".format(
+                winner.display_name,
+                looser.display_name,
+                mutual_games_property,
+            ),
+            inline=True,
+        )
         await ctx.respond(embed=embed)
         return
 
     # K = execute_sql(conn, sql_get_k)
     K = select_k_regular(conn)
-    
+
     ## extract current rating for message winner
     # winner rating
     Ra = select_rating_sql(conn, winner.id)
 
     ## extract current rating for mentioned looser
     # looser rating
-    Rop = select_rating_sql(conn, looser.id) 
+    Rop = select_rating_sql(conn, looser.id)
     ### calculating ELO ###
 
     ## gathered delta points from current game result
@@ -522,84 +757,124 @@ async def results(ctx, winner: discord.Member, winner_points, looser: discord.Me
     Ea = delta_points(Rop, Ra)
     # Eop = round( 1 / (1 + 10 ** ((Ra - Rop) / 400 )), 2)
     Eop = delta_points(Ra, Rop)
-    
+
     ## calculate new rating
     # Calculate new Ra as Rna, 1 for win
     # Rna = round( Ra + K * (1 - Ea), 2)
     Rna = rating(1, K, Ra, Ea)
     Rna_diff = round(Rna - Ra, 2)
-    
+
     # Calculate new Rop as Rnop, 0 for loss
     # Rnop = round( Rop + K * (0 - Eop), 2)
     Rnop = rating(0, K, Rop, Eop)
     Rnop_diff = round(Rop - Rnop, 2)
-    
-    
+
     curr_date = select_curr_date(conn)
-    #insert game entry
-    game_result = (winner.id, winner_points, Rna_diff, looser.id, looser_points, Rnop_diff, curr_date);
+    # insert game entry
+    game_result = (
+        winner.id,
+        winner_points,
+        Rna_diff,
+        looser.id,
+        looser_points,
+        Rnop_diff,
+        curr_date,
+    )
     game_id = insert_regular_win(conn, game_result)
 
     update_member(conn, (Rna, winner.id))
     update_member(conn, (Rnop, looser.id))
-    
+
     # Pretty output of updated rating for participant
-    embed_win = discord.Embed(title="Updated League profile", colour=discord.Colour(0x6790a7))
+    embed_win = discord.Embed(
+        title="Updated League profile", colour=discord.Colour(0x6790A7)
+    )
     embed_win.add_field(name="Game_id", value=game_id, inline=False)
     embed_win.add_field(name="Old Rating", value=Ra, inline=True)
     embed_win.add_field(name="Diff", value=Rna_diff, inline=True)
     embed_win.add_field(name="New Rating", value=Rna, inline=True)
-    embed_win.set_footer(text=winner.display_name, icon_url = winner.display_avatar)
+    embed_win.set_footer(
+        text=winner.display_name, icon_url=winner.display_avatar
+    )
 
-    embed_loss = discord.Embed(title="Updated League profile", colour=discord.Colour(0x6790a7))
+    embed_loss = discord.Embed(
+        title="Updated League profile", colour=discord.Colour(0x6790A7)
+    )
     embed_loss.add_field(name="Game_id", value=game_id, inline=False)
     embed_loss.add_field(name="Old Rating", value=Rop, inline=True)
     embed_loss.add_field(name="Diff", value=Rnop_diff, inline=True)
     embed_loss.add_field(name="New Rating", value=Rnop, inline=True)
-    embed_loss.set_footer(text=looser.display_name, icon_url = looser.display_avatar)
-    
-    msg = await ctx.respond(f"(Game {game_id}): {winner.display_name} won against {looser.display_name} with {winner_points} - {looser_points} score!")
-    await ctx.send(embeds=[embed_win,embed_loss])
+    embed_loss.set_footer(
+        text=looser.display_name, icon_url=looser.display_avatar
+    )
 
-            # add confirmation reactions to game results message
-    # for reaction in reactions:
-    #     await msg.add_reaction(reaction)
+    await ctx.respond(
+        f"(Game {game_id}): {winner.display_name} won against {looser.display_name} with {winner_points} - {looser_points} score!"
+    )
+    emb_msg = await ctx.send(embeds=[embed_win, embed_loss])
+    for reaction in accept_reactions:
+        await emb_msg.add_reaction(reaction)
+
 
 @bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
 @permissions.has_role("league admin")
-async def tournament_results(ctx, winner: discord.Member, winner_points, looser: discord.Member, looser_points):
+async def tournament_results(
+    ctx,
+    winner: Option(discord.Member, "@user", required=True),
+    winner_points: Option(
+        int, "Points destroyed", required=True, default=0
+    ),
+    looser: Option(discord.Member, "@user", required=True),
+    looser_points: Option(
+        int, "Points destroyed", required=True, default=0
+    ),
+):
     """Submit tournament leage game results."""
     role_check = discord.utils.get(ctx.guild.roles, name="league")
 
     if ctx.channel.id != results_channel_id:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
-        embed.add_field(name="ERROR", value='Wrong channel!', inline=True)
+        embed.add_field(
+            name="ERROR", value="Wrong channel!", inline=True
+        )
         await ctx.respond(embed=embed)
         return
     elif role_check not in winner.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
-        embed.add_field(name="ERROR", value='{} is not a league member!'.format(winner.display_name), inline=True)
+        embed.add_field(
+            name="ERROR",
+            value="{} is not a league member!".format(
+                winner.display_name
+            ),
+            inline=True,
+        )
         await ctx.respond(embed=embed)
         return
     elif role_check not in looser.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
-        embed.add_field(name="ERROR", value='{} is not a league member!'.format(looser.display_name), inline=True)
+        embed.add_field(
+            name="ERROR",
+            value="{} is not a league member!".format(
+                looser.display_name
+            ),
+            inline=True,
+        )
         await ctx.respond(embed=embed)
         return
 
     # K = execute_sql(conn, sql_get_k)
     K = select_k_tournament(conn)
-    
+
     # game will not count for mutual games
     tournament = 1
-    
+
     ## extract current rating for message winner
     # winner rating
     Ra = select_rating_sql(conn, winner.id)
 
     ## extract current rating for mentioned looser
     # looser rating
-    Rop = select_rating_sql(conn, looser.id) 
+    Rop = select_rating_sql(conn, looser.id)
     ### calculating ELO ###
 
     ## gathered delta points from current game result
@@ -607,44 +882,87 @@ async def tournament_results(ctx, winner: discord.Member, winner_points, looser:
     Ea = delta_points(Rop, Ra)
     # Eop = round( 1 / (1 + 10 ** ((Ra - Rop) / 400 )), 2)
     Eop = delta_points(Ra, Rop)
-    
+
     ## calculate new rating
     # Calculate new Ra as Rna, 1 for win
     # Rna = round( Ra + K * (1 - Ea), 2)
     Rna = rating(1, K, Ra, Ea)
     Rna_diff = round(Rna - Ra, 2)
-    
+
     # Calculate new Rop as Rnop, 0 for loss
     # Rnop = round( Rop + K * (0 - Eop), 2)
     Rnop = rating(0, K, Rop, Eop)
     Rnop_diff = round(Rop - Rnop, 2)
-    
-    
+
     curr_date = select_curr_date(conn)
-    #insert game entry
-    game_result = (winner.id, winner_points, Rna_diff, looser.id, looser_points, Rnop_diff, tournament, curr_date);
+    # insert game entry
+    game_result = (
+        winner.id,
+        winner_points,
+        Rna_diff,
+        looser.id,
+        looser_points,
+        Rnop_diff,
+        tournament,
+        curr_date,
+    )
     game_id = insert_tournament_win(conn, game_result)
 
     update_member(conn, (Rna, winner.id))
     update_member(conn, (Rnop, looser.id))
-    
+
     # Pretty output of updated rating for participant
-    embed_win = discord.Embed(title="Updated League profile", colour=discord.Colour(0x6790a7))
+    embed_win = discord.Embed(
+        title="Updated League profile", colour=discord.Colour(0x6790A7)
+    )
     embed_win.add_field(name="Game_id", value=game_id, inline=False)
     embed_win.add_field(name="Old Rating", value=Ra, inline=True)
     embed_win.add_field(name="Diff", value=Rna_diff, inline=True)
     embed_win.add_field(name="New Rating", value=Rna, inline=True)
-    embed_win.set_footer(text=winner.display_name, icon_url = winner.display_avatar)
+    embed_win.set_footer(
+        text=winner.display_name, icon_url=winner.display_avatar
+    )
 
-    embed_loss = discord.Embed(title="Updated League profile", colour=discord.Colour(0x6790a7))
+    embed_loss = discord.Embed(
+        title="Updated League profile", colour=discord.Colour(0x6790A7)
+    )
     embed_loss.add_field(name="Game_id", value=game_id, inline=False)
     embed_loss.add_field(name="Old Rating", value=Rop, inline=True)
     embed_loss.add_field(name="Diff", value=Rnop_diff, inline=True)
     embed_loss.add_field(name="New Rating", value=Rnop, inline=True)
-    embed_loss.set_footer(text=looser.display_name, icon_url = looser.display_avatar)
-        
-    msg = await ctx.respond(f"(Game {game_id}): {winner.display_name} won in a tournament against {looser.display_name} with {winner_points} - {looser_points} score!")
-    await ctx.send(embeds=[embed_win,embed_loss])
+    embed_loss.set_footer(
+        text=looser.display_name, icon_url=looser.display_avatar
+    )
+
+    msg = await ctx.respond(
+        f"(Game {game_id}): {winner.display_name} won in a tournament against {looser.display_name} with {winner_points} - {looser_points} score!"
+    )
+    await ctx.send(embeds=[embed_win, embed_loss])
+
+
+@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
+@permissions.has_role("league admin")
+async def fun_win(
+    ctx,
+    winner: discord.Member,
+    winner_points,
+    looser: discord.Member,
+    looser_points,
+):
+    await ctx.respond()
+
+
+@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
+@permissions.has_role("league admin")
+async def fun_participation(
+    ctx,
+    winner: discord.Member,
+    winner_points,
+    looser: discord.Member,
+    looser_points,
+):
+    await ctx.respond()
+
 
 # @bot.slash_command(guild_ids=[test_guild_id])
 # async def date(ctx):
@@ -683,11 +1001,11 @@ sql_create_games_table = """CREATE TABLE IF NOT EXISTS games (
                                 looser_score integer NOT NULL,
                                 looser_rating_diff integer NOT NULL,
                                 tournament boolean DEFAULT FALSE,
+                                fun_event boolean DEFAULT FALSE,
                                 game_date date NOT NULL
                             );"""
 
 
- 
 ##########################                ##########################
 ##########################  DB PROPERTIES ##########################
 ##########################                ##########################
@@ -702,15 +1020,25 @@ k_regular_properties = ("k_regular", 16, None, None, None)
 
 k_tournament_properties = ("k_tournament", 32, None, None, None)
 
+pt_fun_event_win_properties = ("pt_fun_event_win", 16, None, None, None)
+
+pt_fun_event_participation_properties = (
+    "pt_fun_event_participation",
+    8,
+    None,
+    None,
+    None,
+)
+
 num_mutual_games = ("mutual_games", 10, None, None, None)
 
 num_minimal_games = ("minimal_games", 1, None, None, None)
 
 
-
 ##########################             ##########################
 ########################## DB COMMANDS ##########################
 ##########################             ##########################
+
 
 @bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
 @permissions.permission(user_id=db_admin_id, permission=True)
@@ -728,6 +1056,10 @@ async def create_tables(ctx):
 
         set_properties(conn, k_tournament_properties)
 
+        set_properties(conn, pt_fun_event_win_properties)
+
+        set_properties(conn, pt_fun_event_participation_properties)
+
         set_properties(conn, num_mutual_games)
 
         set_properties(conn, num_minimal_games)
@@ -735,6 +1067,7 @@ async def create_tables(ctx):
         print("Error! cannot create the database connection.")
 
     await ctx.respond(f"Tables created!")
+
 
 @bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
 @permissions.permission(user_id=db_admin_id, permission=True)
@@ -747,7 +1080,7 @@ async def recreate_tables(ctx):
         drop_table(conn, sql_drop_properties_table)
 
         drop_table(conn, sql_drop_games_table)
-        
+
         create_table(conn, sql_create_members_table)
 
         create_table(conn, sql_create_properties_table)
@@ -758,6 +1091,10 @@ async def recreate_tables(ctx):
 
         set_properties(conn, k_tournament_properties)
 
+        set_properties(conn, pt_fun_event_win_properties)
+
+        set_properties(conn, pt_fun_event_participation_properties)
+
         set_properties(conn, num_mutual_games)
 
         set_properties(conn, num_minimal_games)
@@ -765,10 +1102,11 @@ async def recreate_tables(ctx):
     else:
         print("Error! cannot create the database connection.")
 
-    await ctx.respond(f"Tables recreated!")    
+    await ctx.respond(f"Tables recreated!")
 
-# SELECT * 
-#    FROM games 
+
+# SELECT *
+#    FROM games
 #    WHERE game_date BETWEEN "2010-01-01" AND "2013-01-01"
 #    WHERE game_date > '2021-12-01'
 bot.run(token)
