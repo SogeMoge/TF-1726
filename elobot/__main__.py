@@ -444,7 +444,7 @@ async def on_ready():
 @bot.slash_command(
     guild_ids=[test_guild_id, russian_guild_id]
 )  # create a slash command for the supplied guilds
-async def info(ctx):
+async def links(ctx):
     """Useful X-Wing resources"""  # the command description can be supplied as the docstring
     # embed = discord.Embed(title="X-Wing resources", colour=discord.Colour(0xFFD700))
     # embed.add_field(name="Actual Rules documents", value="https://www.atomicmassgames.com/xwing-documents", inline=True)
@@ -669,7 +669,7 @@ async def top(ctx):
 
 @bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
 @permissions.has_role("league")
-async def results(
+async def game(
     ctx,
     winner: Option(discord.Member, "@user", required=True),
     winner_points: Option(
@@ -818,7 +818,7 @@ async def results(
 
 @bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
 @permissions.has_role("league admin")
-async def tournament_results(
+async def tournament_game(
     ctx,
     winner: Option(discord.Member, "@user", required=True),
     winner_points: Option(
@@ -954,7 +954,7 @@ async def fun_win(
 
 @bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
 @permissions.has_role("league admin")
-async def fun_participation(
+async def fun_game(
     ctx,
     winner: discord.Member,
     winner_points,
@@ -1042,7 +1042,7 @@ num_minimal_games = ("minimal_games", 1, None, None, None)
 
 @bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
 @permissions.permission(user_id=db_admin_id, permission=True)
-async def create_tables(ctx):
+async def league_create_tables(ctx):
     """Create tables first time"""
     if conn is not None:
 
@@ -1071,7 +1071,7 @@ async def create_tables(ctx):
 
 @bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
 @permissions.permission(user_id=db_admin_id, permission=True)
-async def recreate_tables(ctx):
+async def league_recreate_tables(ctx):
     """Drop and Create tables for fresh start"""
     if conn is not None:
 
