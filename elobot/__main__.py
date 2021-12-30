@@ -502,7 +502,7 @@ async def builders(ctx):
 #########################                   #########################
 
 
-@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
+@bot.slash_command(guild_ids=[russian_guild_id], default_permission=False)
 @permissions.has_role("league admin")
 async def register(ctx, member: discord.Member):
     """Give league member role to a mentioned user."""
@@ -538,7 +538,7 @@ async def register(ctx, member: discord.Member):
 #        await ctx.respond(f"It seems that registration for {member.display_name} has failed")
 
 
-@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
+@bot.slash_command(guild_ids=[test_guild_id, russian_guild_id], default_permission=False)
 @permissions.has_role("league")
 async def status(ctx):
     """Get personal league stats."""
@@ -561,7 +561,7 @@ async def status(ctx):
         await ctx.respond(embed=embed)
 
 
-@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
+@bot.slash_command(guild_ids=[test_guild_id, russian_guild_id], default_permission=False)
 @permissions.has_role("league")
 async def check(ctx, member: discord.Member):
     """Get mutual games count."""
@@ -591,7 +591,7 @@ async def check(ctx, member: discord.Member):
     await ctx.respond(embed=embed)
 
 
-@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
+@bot.slash_command(guild_ids=[test_guild_id, russian_guild_id], default_permission=False)
 @permissions.has_role("league admin")
 async def top(ctx):
     """Show full league leaderbord."""
@@ -667,7 +667,7 @@ async def top(ctx):
     # await ctx.send(f"Results from {date}", embed=embed, view=view)
 
 
-@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
+@bot.slash_command(guild_ids=[russian_guild_id], default_permission=False)
 @permissions.has_role("league")
 async def game(
     ctx,
@@ -816,7 +816,7 @@ async def game(
         await emb_msg.add_reaction(reaction)
 
 
-@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
+@bot.slash_command(guild_ids=[russian_guild_id], default_permission=False)
 @permissions.has_role("league admin")
 async def tournament_game(
     ctx,
