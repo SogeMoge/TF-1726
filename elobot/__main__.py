@@ -397,6 +397,7 @@ class UpdateView(discord.ui.View):
                 ) b on m.member_id = b.member_id
                 where 1=1
                 AND cnt_win+cnt_loose>={min_games}
+                ORDER BY m.rating DESC
                 ;"""
         ):
             n = n + 1
