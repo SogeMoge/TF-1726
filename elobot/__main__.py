@@ -118,33 +118,6 @@ def insert_tournament_win(conn, game_result):
     conn.commit()
     return cur.lastrowid
 
-
-def insert_fun_event_win(conn, game_result):
-    """
-    Submit a new game in the games table
-    :param conn:
-    :param win_result:
-    """
-    sql = """ INSERT INTO games (winner_id,winner_score,winner_rating_diff,looser_id,looser_score,looser_rating_diff,fun_event,game_date)
-              VALUES(?,?,?,?,?,?,?,?) """
-    cur = conn.cursor()
-    cur.execute(sql, game_result)
-    conn.commit()
-
-
-def insert_fun_event_participation(conn, game_result):
-    """
-    Submit a new game in the games table
-    :param conn:
-    :param win_result:
-    """
-    sql = """ INSERT INTO games (winner_id,winner_score,winner_rating_diff,looser_id,looser_score,looser_rating_diff,fun_event,game_date)
-              VALUES(?,?,?,?,?,?,?,?) """
-    cur = conn.cursor()
-    cur.execute(sql, game_result)
-    conn.commit()
-
-
 def update_member(conn, rating):
     """
     update member's rating and streak
@@ -230,6 +203,31 @@ def select_minimal_games_property(conn):
 
     return cur.fetchone()[0]
 
+def select_fun_event_participation_points(conn):
+    """
+    Query prize points for fn event participation
+    :param conn: the Connection object
+    :return:
+    """
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT int_value FROM properties WHERE property_name = 'pt_fun_event_participation'"
+    )
+
+    return cur.fetchone()[0]
+
+def select_fun_event_win_points(conn):
+    """
+    Query prize points for fn event win
+    :param conn: the Connection object
+    :return:
+    """
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT int_value FROM properties WHERE property_name = 'pt_fun_event_win'"
+    )
+
+    return cur.fetchone()[0]
 
 def select_mutual_games_played(conn, author_id, member_id):
     """
@@ -326,6 +324,7 @@ def get_member_stats(conn, member_id):
                    FROM  members m 
                    LEFT JOIN games g ON m.member_id=g.winner_id
                    WHERE 1=1
+                   AND g.fun_event = 0
                    AND m.member_id={member_id} """
     cur_w = conn.cursor()
     cur_w.execute(sql_win)
@@ -335,6 +334,7 @@ def get_member_stats(conn, member_id):
                    FROM  members m 
                    LEFT JOIN games g ON m.member_id=g.looser_id
                    WHERE 1=1
+                   AND g.fun_event = 0
                    AND m.member_id={member_id} """
     cur_l = conn.cursor()
     cur_l.execute(sql_loss)
@@ -788,7 +788,7 @@ async def game(
 
     # Pretty output of updated rating for participant
     embed_win = discord.Embed(
-        title="Updated League profile", colour=discord.Colour(0x6790A7)
+        title="Updated League profile", colour=discord.Colour(0x00FFFF)
     )
     embed_win.add_field(name="Game_id", value=game_id, inline=False)
     embed_win.add_field(name="Old Rating", value=Ra, inline=True)
@@ -799,7 +799,7 @@ async def game(
     )
 
     embed_loss = discord.Embed(
-        title="Updated League profile", colour=discord.Colour(0x6790A7)
+        title="Updated League profile", colour=discord.Colour(0x00FFFF)
     )
     embed_loss.add_field(name="Game_id", value=game_id, inline=False)
     embed_loss.add_field(name="Old Rating", value=Rop, inline=True)
@@ -914,7 +914,7 @@ async def tournament_game(
 
     # Pretty output of updated rating for participant
     embed_win = discord.Embed(
-        title="Updated League profile", colour=discord.Colour(0x6790A7)
+        title="Updated League profile", colour=discord.Colour(0x00FFFF)
     )
     embed_win.add_field(name="Game_id", value=game_id, inline=False)
     embed_win.add_field(name="Old Rating", value=Ra, inline=True)
@@ -925,7 +925,7 @@ async def tournament_game(
     )
 
     embed_loss = discord.Embed(
-        title="Updated League profile", colour=discord.Colour(0x6790A7)
+        title="Updated League profile", colour=discord.Colour(0x00FFFF)
     )
     embed_loss.add_field(name="Game_id", value=game_id, inline=False)
     embed_loss.add_field(name="Old Rating", value=Rop, inline=True)
@@ -941,28 +941,40 @@ async def tournament_game(
     await ctx.send(embeds=[embed_win, embed_loss])
 
 
-@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
+@bot.slash_command(guild_ids=[russian_guild_id], default_permission=False)
 @permissions.has_role("league admin")
 async def fun_win(
     ctx,
     winner: discord.Member,
-    winner_points,
-    looser: discord.Member,
-    looser_points,
 ):
-    await ctx.respond()
+    points = select_fun_event_win_points(conn)
+    Ra = select_rating_sql(conn, winner.id)
+    Rna = Ra + points
+    update_member(conn, (Rna, winner.id))
+    embed = discord.Embed(title="Fun event win", colour=discord.Colour(0x00B300))
+    embed.add_field(name="Old rating", value=Ra, inline=False)
+    embed.add_field(name="Win points", value=points, inline=True)
+    embed.add_field(name="New rating", value=Rna, inline=True)
+    embed.set_footer(text=winner.display_name, icon_url=winner.display_avatar)
+    await ctx.respond(embed=embed)
 
 
-@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
+@bot.slash_command(guild_ids=[russian_guild_id], default_permission=False)
 @permissions.has_role("league admin")
 async def fun_game(
     ctx,
-    winner: discord.Member,
-    winner_points,
-    looser: discord.Member,
-    looser_points,
+    participant: discord.Member,
 ):
-    await ctx.respond()
+    points = select_fun_event_participation_points(conn)
+    Ra = select_rating_sql(conn, participant.id)
+    Rna = Ra + points
+    update_member(conn, (Rna, participant.id))
+    embed = discord.Embed(title="Fun event participation", colour=discord.Colour(0x00B300))
+    embed.add_field(name="Old rating", value=Ra, inline=False)
+    embed.add_field(name="Participation points", value=points, inline=True)
+    embed.add_field(name="New rating", value=Rna, inline=True)
+    embed.set_footer(text=participant.display_name, icon_url=participant.display_avatar)
+    await ctx.respond(embed=embed)
 
 
 # @bot.slash_command(guild_ids=[test_guild_id])
