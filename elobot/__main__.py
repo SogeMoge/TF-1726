@@ -410,7 +410,7 @@ class UpdateView(discord.ui.View):
             )
         min_games = select_minimal_games_property(conn)
         await interaction.response.edit_message(
-            content=f"Top resuts, played at least {min_games} game(s)\nUpdated from {date}",
+            content=f"Top resuts, played at least {min_games} game(s)\nUpdated from {date.today()}",
             embed=embed,
             view=UpdateView(),
         )
