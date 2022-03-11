@@ -118,6 +118,7 @@ def insert_tournament_win(conn, game_result):
     conn.commit()
     return cur.lastrowid
 
+
 def update_member(conn, rating):
     """
     update member's rating and streak
@@ -203,6 +204,7 @@ def select_minimal_games_property(conn):
 
     return cur.fetchone()[0]
 
+
 def select_fun_event_participation_points(conn):
     """
     Query prize points for fn event participation
@@ -216,6 +218,7 @@ def select_fun_event_participation_points(conn):
 
     return cur.fetchone()[0]
 
+
 def select_fun_event_win_points(conn):
     """
     Query prize points for fn event win
@@ -228,6 +231,7 @@ def select_fun_event_win_points(conn):
     )
 
     return cur.fetchone()[0]
+
 
 def select_mutual_games_played(conn, author_id, member_id):
     """
@@ -503,7 +507,9 @@ async def builders(ctx):
 #########################                   #########################
 
 
-@bot.slash_command(guild_ids=[russian_guild_id], default_permission=False)
+@bot.slash_command(
+    guild_ids=[russian_guild_id], default_permission=False
+)
 @permissions.has_role("league admin")
 async def register(ctx, member: discord.Member):
     """Give league member role to a mentioned user."""
@@ -539,7 +545,10 @@ async def register(ctx, member: discord.Member):
 #        await ctx.respond(f"It seems that registration for {member.display_name} has failed")
 
 
-@bot.slash_command(guild_ids=[test_guild_id, russian_guild_id], default_permission=False)
+@bot.slash_command(
+    guild_ids=[test_guild_id, russian_guild_id],
+    default_permission=False,
+)
 @permissions.has_role("league")
 async def status(ctx):
     """Get personal league stats."""
@@ -562,7 +571,10 @@ async def status(ctx):
         await ctx.respond(embed=embed)
 
 
-@bot.slash_command(guild_ids=[test_guild_id, russian_guild_id], default_permission=False)
+@bot.slash_command(
+    guild_ids=[test_guild_id, russian_guild_id],
+    default_permission=False,
+)
 @permissions.has_role("league")
 async def check(ctx, member: discord.Member):
     """Get mutual games count."""
@@ -592,7 +604,10 @@ async def check(ctx, member: discord.Member):
     await ctx.respond(embed=embed)
 
 
-@bot.slash_command(guild_ids=[test_guild_id, russian_guild_id], default_permission=False)
+@bot.slash_command(
+    guild_ids=[test_guild_id, russian_guild_id],
+    default_permission=False,
+)
 @permissions.has_role("league admin")
 async def top(ctx):
     """Show full league leaderbord."""
@@ -668,18 +683,16 @@ async def top(ctx):
     # await ctx.send(f"Results from {date}", embed=embed, view=view)
 
 
-@bot.slash_command(guild_ids=[russian_guild_id], default_permission=False)
+@bot.slash_command(
+    guild_ids=[russian_guild_id], default_permission=False
+)
 @permissions.has_role("league")
 async def game(
     ctx,
     winner: Option(discord.Member, "@user", required=True),
-    winner_points: Option(
-        int, "Points destroyed", required=True, default=0
-    ),
+    winner_points: Option(int, "Points destroyed", required=True),
     looser: Option(discord.Member, "@user", required=True),
-    looser_points: Option(
-        int, "Points destroyed", required=True, default=0
-    ),
+    looser_points: Option(int, "Points destroyed", required=True),
 ):
     """Submit regular leage game results."""
     role_check = discord.utils.get(ctx.guild.roles, name="league")
@@ -817,18 +830,16 @@ async def game(
         await emb_msg.add_reaction(reaction)
 
 
-@bot.slash_command(guild_ids=[russian_guild_id], default_permission=False)
+@bot.slash_command(
+    guild_ids=[russian_guild_id], default_permission=False
+)
 @permissions.has_role("league admin")
 async def tournament_game(
     ctx,
     winner: Option(discord.Member, "@user", required=True),
-    winner_points: Option(
-        int, "Points destroyed", required=True, default=0
-    ),
+    winner_points: Option(int, "Points destroyed", required=True),
     looser: Option(discord.Member, "@user", required=True),
-    looser_points: Option(
-        int, "Points destroyed", required=True, default=0
-    ),
+    looser_points: Option(int, "Points destroyed", required=True),
 ):
     """Submit tournament leage game results."""
     role_check = discord.utils.get(ctx.guild.roles, name="league")
@@ -941,7 +952,9 @@ async def tournament_game(
     await ctx.send(embeds=[embed_win, embed_loss])
 
 
-@bot.slash_command(guild_ids=[russian_guild_id], default_permission=False)
+@bot.slash_command(
+    guild_ids=[russian_guild_id], default_permission=False
+)
 @permissions.has_role("league admin")
 async def fun_win(
     ctx,
@@ -951,15 +964,21 @@ async def fun_win(
     Ra = select_rating_sql(conn, winner.id)
     Rna = Ra + points
     update_member(conn, (Rna, winner.id))
-    embed = discord.Embed(title="Fun event win", colour=discord.Colour(0x00B300))
+    embed = discord.Embed(
+        title="Fun event win", colour=discord.Colour(0x00B300)
+    )
     embed.add_field(name="Old rating", value=Ra, inline=False)
     embed.add_field(name="Win points", value=points, inline=True)
     embed.add_field(name="New rating", value=Rna, inline=True)
-    embed.set_footer(text=winner.display_name, icon_url=winner.display_avatar)
+    embed.set_footer(
+        text=winner.display_name, icon_url=winner.display_avatar
+    )
     await ctx.respond(embed=embed)
 
 
-@bot.slash_command(guild_ids=[russian_guild_id], default_permission=False)
+@bot.slash_command(
+    guild_ids=[russian_guild_id], default_permission=False
+)
 @permissions.has_role("league admin")
 async def fun_game(
     ctx,
@@ -969,11 +988,18 @@ async def fun_game(
     Ra = select_rating_sql(conn, participant.id)
     Rna = Ra + points
     update_member(conn, (Rna, participant.id))
-    embed = discord.Embed(title="Fun event participation", colour=discord.Colour(0x00B300))
+    embed = discord.Embed(
+        title="Fun event participation", colour=discord.Colour(0x00B300)
+    )
     embed.add_field(name="Old rating", value=Ra, inline=False)
-    embed.add_field(name="Participation points", value=points, inline=True)
+    embed.add_field(
+        name="Participation points", value=points, inline=True
+    )
     embed.add_field(name="New rating", value=Rna, inline=True)
-    embed.set_footer(text=participant.display_name, icon_url=participant.display_avatar)
+    embed.set_footer(
+        text=participant.display_name,
+        icon_url=participant.display_avatar,
+    )
     await ctx.respond(embed=embed)
 
 
