@@ -19,6 +19,7 @@ import sql_insert
 import sql_update
 import sql_db
 import db_properties
+import db_tables
 
 intents = discord.Intents().all()
 bot = discord.Bot(intents=intents)
@@ -815,41 +816,6 @@ async def fun_game(
 #     output = date.stdout.read()
 #     await ctx.respond(f"{output}")
 
-##########################             ##########################
-##########################  DB TABLES  ##########################
-##########################             ##########################
-
-sql_create_members_table = """CREATE TABLE IF NOT EXISTS members (
-                                member_id integer UNIQUE PRIMARY KEY,
-                                member_name text NOT NULL,
-                                win_streak integer DEFAULT 0,
-                                rating INT DEFAULT 1500
-                            );"""
-
-# To-DO CREATE STAT VIEW
-
-sql_create_properties_table = """CREATE TABLE IF NOT EXISTS properties (
-                                id integer PRIMARY KEY autoincrement,
-                                property_name text NOT NULL,
-                                int_value integer,
-                                float_value float,
-                                char_value varchar,
-                                date_value date
-                            );"""
-
-sql_create_games_table = """CREATE TABLE IF NOT EXISTS games (
-                                game_id integer UNIQUE PRIMARY KEY autoincrement,
-                                winner_id integer REFERENCES members(member_id),
-                                winner_score integer NOT NULL,
-                                winner_rating_diff integer NOT NULL,
-                                looser_id integer REFERENCES members(member_id),
-                                looser_score integer NOT NULL,
-                                looser_rating_diff integer NOT NULL,
-                                tournament boolean DEFAULT FALSE,
-                                fun_event boolean DEFAULT FALSE,
-                                game_date date NOT NULL
-                            );"""
-
 
 ##########################             ##########################
 ########################## DB COMMANDS ##########################
@@ -862,11 +828,11 @@ async def league_create_tables(ctx):
     """Create tables first time"""
     if conn is not None:
 
-        sql_db.create_table(conn, sql_create_members_table)
+        sql_db.create_table(conn, db_tables.sql_create_members_table)
 
-        sql_db.create_table(conn, sql_create_properties_table)
+        sql_db.create_table(conn, db_tables.sql_create_properties_table)
 
-        sql_db.create_table(conn, sql_create_games_table)
+        sql_db.create_table(conn, db_tables.sql_create_games_table)
 
         sql_insert.set_properties(conn, db_properties.k_regular_properties)
 
@@ -891,17 +857,17 @@ async def league_recreate_tables(ctx):
     """Drop and Create tables for fresh start"""
     if conn is not None:
 
-        sql_db.drop_table(conn, sql_drop_members_table)
+        sql_db.drop_table(conn, db_tables.sql_drop_members_table)
 
-        sql_db.drop_table(conn, sql_drop_properties_table)
+        sql_db.drop_table(conn, db_tables.sql_drop_properties_table)
 
-        sql_db.drop_table(conn, sql_drop_games_table)
+        sql_db.drop_table(conn, db_tables.sql_drop_games_table)
 
-        sql_db.create_table(conn, sql_create_members_table)
+        sql_db.create_table(conn, db_tables.sql_create_members_table)
 
-        sql_db.create_table(conn, sql_create_properties_table)
+        sql_db.create_table(conn, db_tables.sql_create_properties_table)
 
-        sql_db.create_table(conn, sql_create_games_table)
+        sql_db.create_table(conn, db_tables.sql_create_games_table)
 
         sql_insert.set_properties(conn, db_properties.k_regular_properties)
 
