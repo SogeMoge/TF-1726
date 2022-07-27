@@ -136,50 +136,6 @@ def update_member(conn, rating):
     cur.execute(sql, rating)
     conn.commit()
 
-
-# def select_rating_sql(conn, member_id):
-#     """
-#     Query all rows in the tasks table
-#     :param conn: the Connection object
-#     :param member_id:
-#     :return:
-#     """
-#     cur = conn.cursor()
-#     cur.execute(
-#         "SELECT rating FROM members WHERE member_id=?", (member_id,)
-#     )
-
-#     return cur.fetchone()[0]
-
-
-def select_k_regular(conn):
-    """
-    Query date
-    :param conn: the Connection object
-    :return:
-    """
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT int_value FROM properties WHERE property_name = 'k_regular'"
-    )
-
-    return cur.fetchone()[0]
-
-
-def select_k_tournament(conn):
-    """
-    Query date
-    :param conn: the Connection object
-    :return:
-    """
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT int_value FROM properties WHERE property_name = 'k_tournament'"
-    )
-
-    return cur.fetchone()[0]
-
-
 def select_mutual_games_property(conn):
     """
     Query mutual games
@@ -758,7 +714,7 @@ async def game(
         return
 
     # K = execute_sql(conn, sql_get_k)
-    K = select_k_regular(conn)
+    K = sql_select.k_regular(conn)
 
     ## extract current rating for message winner
     # winner rating
@@ -880,7 +836,7 @@ async def tournament_game(
         return
 
     # K = execute_sql(conn, sql_get_k)
-    K = select_k_tournament(conn)
+    K = sql_select.k_tournament(conn)
 
     # game will not count for mutual games
     tournament = 1

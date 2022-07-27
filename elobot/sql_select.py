@@ -26,3 +26,29 @@ def rating(conn, member_id):
     )
 
     return cur.fetchone()[0]
+
+def k_regular(conn):
+    """
+    Query date
+    :param conn: the Connection object
+    :return:
+    """
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT int_value FROM properties WHERE property_name = 'k_regular'"
+    )
+
+    return cur.fetchone()[0]
+
+def k_tournament(conn):
+    """
+    Query date
+    :param conn: the Connection object
+    :return:
+    """
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT int_value FROM properties WHERE property_name = 'k_tournament'"
+    )
+
+    return cur.fetchone()[0]
