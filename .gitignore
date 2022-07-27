@@ -57,3 +57,5 @@ env*
 # DB
 *.db
 elo.db
+elo.db_20220523
+

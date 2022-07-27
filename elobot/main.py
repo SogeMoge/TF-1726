@@ -17,6 +17,7 @@ from discord.ui import Button, View, Select
 import sql_select
 import sql_insert
 import sql_update
+import sql_create
 
 intents = discord.Intents().all()
 bot = discord.Bot(intents=intents)
@@ -51,34 +52,33 @@ def create_connection(db_file):
 
     return conn
 
-
 conn = create_connection(db)
 
 
-def create_table(conn, create_table_sql):
-    """create a table from the create_table_sql statement
-    :param conn: Connection object
-    :param create_table_sql: a CREATE TABLE statement
-    :return:
-    """
-    try:
-        c = conn.cursor()
-        c.execute(create_table_sql)
-    except Error as e:
-        print(e)
+# def create_table(conn, create_table_sql):
+#     """create a table from the create_table_sql statement
+#     :param conn: Connection object
+#     :param create_table_sql: a CREATE TABLE statement
+#     :return:
+#     """
+#     try:
+#         c = conn.cursor()
+#         c.execute(create_table_sql)
+#     except Error as e:
+#         print(e)
 
 
-def drop_table(conn, drop_table_sql):
-    """drop a table from the drop_table_sql statement
-    :param conn: Connection object
-    :param create_table_sql: a DROP TABLE statement
-    :return:
-    """
-    try:
-        c = conn.cursor()
-        c.execute(drop_table_sql)
-    except Error as e:
-        print(e)
+# def sql_db.drop_table(conn, sql_db.drop_table_sql):
+#     """drop a table from the sql_db.drop_table_sql statement
+#     :param conn: Connection object
+#     :param create_table_sql: a DROP TABLE statement
+#     :return:
+#     """
+#     try:
+#         c = conn.cursor()
+#         c.execute(sql_db.drop_table_sql)
+#     except Error as e:
+#         print(e)
 
 # def sql_update.member(conn, rating):
 #     """
@@ -890,11 +890,11 @@ async def league_create_tables(ctx):
     """Create tables first time"""
     if conn is not None:
 
-        create_table(conn, sql_create_members_table)
+        sql_db.create_table(conn, sql_create_members_table)
 
-        create_table(conn, sql_create_properties_table)
+        sql_db.create_table(conn, sql_create_properties_table)
 
-        create_table(conn, sql_create_games_table)
+        sql_db.create_table(conn, sql_create_games_table)
 
         sql_insert.set_properties(conn, k_regular_properties)
 
@@ -919,17 +919,17 @@ async def league_recreate_tables(ctx):
     """Drop and Create tables for fresh start"""
     if conn is not None:
 
-        drop_table(conn, sql_drop_members_table)
+        sql_db.drop_table(conn, sql_drop_members_table)
 
-        drop_table(conn, sql_drop_properties_table)
+        sql_db.drop_table(conn, sql_drop_properties_table)
 
-        drop_table(conn, sql_drop_games_table)
+        sql_db.drop_table(conn, sql_drop_games_table)
 
-        create_table(conn, sql_create_members_table)
+        sql_db.create_table(conn, sql_create_members_table)
 
-        create_table(conn, sql_create_properties_table)
+        sql_db.create_table(conn, sql_create_properties_table)
 
-        create_table(conn, sql_create_games_table)
+        sql_db.create_table(conn, sql_create_games_table)
 
         sql_insert.set_properties(conn, k_regular_properties)
 
