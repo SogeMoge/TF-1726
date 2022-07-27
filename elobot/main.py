@@ -15,6 +15,7 @@ from discord.ui import Button, View, Select
 
 # custom bot modules
 import sql_select
+import sql_insert
 
 intents = discord.Intents().all()
 bot = discord.Bot(intents=intents)
@@ -78,50 +79,6 @@ def drop_table(conn, drop_table_sql):
     except Error as e:
         print(e)
 
-
-def insert_sql(conn, sql_querry):
-    """execute querry from sql_querry statement
-    :param conn: Connection object
-    :param sql_querry: a SQL statement
-    :return:
-    """
-    try:
-        c = conn.cursor()
-        c.execute(sql_querry)
-    except Error as e:
-        print(e)
-
-
-def insert_regular_win(conn, game_result):
-    """
-    Submit a new game in the games table
-    :param conn:
-    :param win_result:
-    :return: game id
-    """
-    sql = """ INSERT INTO games (winner_id,winner_score,winner_rating_diff,looser_id,looser_score,looser_rating_diff,game_date)
-              VALUES(?,?,?,?,?,?,?) """
-    cur = conn.cursor()
-    cur.execute(sql, game_result)
-    conn.commit()
-    return cur.lastrowid
-
-
-def insert_tournament_win(conn, game_result):
-    """
-    Submit a new game in the games table
-    :param conn:
-    :param win_result:
-    :return: game id
-    """
-    sql = """ INSERT INTO games (winner_id,winner_score,winner_rating_diff,looser_id,looser_score,looser_rating_diff,tournament,game_date)
-              VALUES(?,?,?,?,?,?,?,?) """
-    cur = conn.cursor()
-    cur.execute(sql, game_result)
-    conn.commit()
-    return cur.lastrowid
-
-
 def update_member(conn, rating):
     """
     update member's rating and streak
@@ -135,110 +92,6 @@ def update_member(conn, rating):
     cur = conn.cursor()
     cur.execute(sql, rating)
     conn.commit()
-
-# def sql_select.minimal_games_property(conn):
-#     """
-#     Query minimal number of games
-#     :param conn: the Connection object
-#     :return:
-#     """
-#     cur = conn.cursor()
-#     cur.execute(
-#         "SELECT int_value FROM properties WHERE property_name = 'minimal_games'"
-#     )
-
-#     return cur.fetchone()[0]
-
-
-# def sql_select.fun_event_participation_points(conn):
-#     """
-#     Query prize points for fn event participation
-#     :param conn: the Connection object
-#     :return:
-#     """
-#     cur = conn.cursor()
-#     cur.execute(
-#         "SELECT int_value FROM properties WHERE property_name = 'pt_fun_event_participation'"
-#     )
-
-#     return cur.fetchone()[0]
-
-
-# def sql_select.fun_event_win_points(conn):
-#     """
-#     Query prize points for fn event win
-#     :param conn: the Connection object
-#     :return:
-#     """
-#     cur = conn.cursor()
-#     cur.execute(
-#         "SELECT int_value FROM properties WHERE property_name = 'pt_fun_event_win'"
-#     )
-
-#     return cur.fetchone()[0]
-
-
-# def sql_select.mutual_games_played(conn, author_id, member_id):
-#     """
-#     Query mutual games played with mentioned user
-#     :param conn: the Connection object
-#     :param author_id: author of the command
-#     :param member_id: member to check
-#     :return:
-#     """
-#     cur = conn.cursor()
-#     sql = f""" SELECT COUNT(game_id)
-#                FROM games 
-#                WHERE tournament = 0
-#                AND fun_event = 0
-#                AND ((winner_id = {author_id} AND looser_id = {member_id}) OR (winner_id = {member_id} AND looser_id = {author_id}));
-#            """
-#     cur.execute(sql)
-#     return cur.fetchone()[0]
-
-
-# def select_rating_position(conn, member_id):
-#     """
-#     Select current rating position for author
-#     :param member_id: author of the command
-#     """
-#     cur = conn.cursor()
-#     sql = f""" SELECT COUNT(member_id) 
-#               FROM members 
-#               WHERE rating >= (SELECT rating 
-#                                FROM members 
-#                                WHERE member_id = {member_id})
-#               """
-#     cur.execute(sql)
-#     return cur.fetchone()[0]
-
-
-# def sql_select.curr_date(conn):
-#     """
-#     Query date
-#     :param conn: the Connection object
-#     :return:
-#     """
-#     cur = conn.cursor()
-#     cur.execute("SELECT datetime('now', 'localtime')")
-
-#     return cur.fetchone()[0]
-
-
-def set_properties(conn, properties):
-    """
-    Create a new project into the projects table
-    :param conn:
-    :param project:
-    :return: project id
-    """
-    sql = """ INSERT INTO properties(property_name,int_value,float_value,char_value,date_value)
-              VALUES(?,?,?,?,?) """
-    cur = conn.cursor()
-    cur.execute(sql, properties)
-    conn.commit()
-    return cur.lastrowid
-
 
 def delta_points(opponent_rating, member_rating):
     """
@@ -471,7 +324,7 @@ async def register(ctx, member: discord.Member):
     else:
         # Inserts row with user data into db as well as default game stat values
         insert_member_sql_querry = f"""INSERT INTO members (member_id, member_name) VALUES ({member.id}, '{member.name}');"""
-        insert_sql(conn, insert_member_sql_querry)
+        sql_insert.statement(conn, insert_member_sql_querry)
         conn.commit()
         # add league role
         await member.add_roles(role)
@@ -741,7 +594,7 @@ async def game(
         Rnop_diff,
         curr_date,
     )
-    game_id = insert_regular_win(conn, game_result)
+    game_id = sql_insert.regular_win(conn, game_result)
 
     update_member(conn, (Rna, winner.id))
     update_member(conn, (Rnop, looser.id))
@@ -867,7 +720,7 @@ async def tournament_game(
         tournament,
         curr_date,
     )
-    game_id = insert_tournament_win(conn, game_result)
+    game_id = sql_insert.tournament_win(conn, game_result)
 
     update_member(conn, (Rna, winner.id))
     update_member(conn, (Rnop, looser.id))
@@ -1042,17 +895,17 @@ async def league_create_tables(ctx):
 
         create_table(conn, sql_create_games_table)
 
-        set_properties(conn, k_regular_properties)
+        sql_insert.set_properties(conn, k_regular_properties)
 
-        set_properties(conn, k_tournament_properties)
+        sql_insert.set_properties(conn, k_tournament_properties)
 
-        set_properties(conn, pt_fun_event_win_properties)
+        sql_insert.set_properties(conn, pt_fun_event_win_properties)
 
-        set_properties(conn, pt_fun_event_participation_properties)
+        sql_insert.set_properties(conn, pt_fun_event_participation_properties)
 
-        set_properties(conn, num_mutual_games)
+        sql_insert.set_properties(conn, num_mutual_games)
 
-        set_properties(conn, num_minimal_games)
+        sql_insert.set_properties(conn, num_minimal_games)
     else:
         print("Error! cannot create the database connection.")
 
@@ -1077,17 +930,17 @@ async def league_recreate_tables(ctx):
 
         create_table(conn, sql_create_games_table)
 
-        set_properties(conn, k_regular_properties)
+        sql_insert.set_properties(conn, k_regular_properties)
 
-        set_properties(conn, k_tournament_properties)
+        sql_insert.set_properties(conn, k_tournament_properties)
 
-        set_properties(conn, pt_fun_event_win_properties)
+        sql_insert.set_properties(conn, pt_fun_event_win_properties)
 
-        set_properties(conn, pt_fun_event_participation_properties)
+        sql_insert.set_properties(conn, pt_fun_event_participation_properties)
 
-        set_properties(conn, num_mutual_games)
+        sql_insert.set_properties(conn, num_mutual_games)
 
-        set_properties(conn, num_minimal_games)
+        sql_insert.set_properties(conn, num_minimal_games)
 
     else:
         print("Error! cannot create the database connection.")
