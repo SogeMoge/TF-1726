@@ -16,6 +16,7 @@ from discord.ui import Button, View, Select
 # custom bot modules
 import sql_select
 import sql_insert
+import sql_update
 
 intents = discord.Intents().all()
 bot = discord.Bot(intents=intents)
@@ -79,19 +80,19 @@ def drop_table(conn, drop_table_sql):
     except Error as e:
         print(e)
 
-def update_member(conn, rating):
-    """
-    update member's rating and streak
-    :param conn:
-    :param rating:
-    :return: project id
-    """
-    sql = """ UPDATE members
-              SET rating = ?
-              WHERE member_id = ?"""
-    cur = conn.cursor()
-    cur.execute(sql, rating)
-    conn.commit()
+# def sql_update.member(conn, rating):
+#     """
+#     update member's rating and streak
+#     :param conn:
+#     :param rating:
+#     :return: project id
+#     """
+#     sql = """ UPDATE members
+#               SET rating = ?
+#               WHERE member_id = ?"""
+#     cur = conn.cursor()
+#     cur.execute(sql, rating)
+#     conn.commit()
 
 def delta_points(opponent_rating, member_rating):
     """
@@ -596,8 +597,8 @@ async def game(
     )
     game_id = sql_insert.regular_win(conn, game_result)
 
-    update_member(conn, (Rna, winner.id))
-    update_member(conn, (Rnop, looser.id))
+    sql_update.member(conn, (Rna, winner.id))
+    sql_update.member(conn, (Rnop, looser.id))
 
     # Pretty output of updated rating for participant
     embed_win = discord.Embed(
@@ -722,8 +723,8 @@ async def tournament_game(
     )
     game_id = sql_insert.tournament_win(conn, game_result)
 
-    update_member(conn, (Rna, winner.id))
-    update_member(conn, (Rnop, looser.id))
+    sql_update.member(conn, (Rna, winner.id))
+    sql_update.member(conn, (Rnop, looser.id))
 
     # Pretty output of updated rating for participant
     embed_win = discord.Embed(
@@ -766,7 +767,7 @@ async def fun_win(
     # Ra = select_rating_sql(conn, winner.id)
     Ra = sql_select.rating(conn, winner.id)
     Rna = Ra + points
-    update_member(conn, (Rna, winner.id))
+    sql_update.member(conn, (Rna, winner.id))
     embed = discord.Embed(
         title="Fun event win", colour=discord.Colour(0x00B300)
     )
@@ -791,7 +792,7 @@ async def fun_game(
     # Ra = select_rating_sql(conn, participant.id)
     Ra = sql_select.rating(conn, participant.id)
     Rna = Ra + points
-    update_member(conn, (Rna, participant.id))
+    sql_update.member(conn, (Rna, participant.id))
     embed = discord.Embed(
         title="Fun event participation", colour=discord.Colour(0x00B300)
     )
