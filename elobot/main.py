@@ -17,7 +17,8 @@ from discord.ui import Button, View, Select
 import sql_select
 import sql_insert
 import sql_update
-import sql_create
+import sql_db
+import db_properties
 
 intents = discord.Intents().all()
 bot = discord.Bot(intents=intents)
@@ -850,35 +851,6 @@ sql_create_games_table = """CREATE TABLE IF NOT EXISTS games (
                             );"""
 
 
-##########################                ##########################
-##########################  DB PROPERTIES ##########################
-##########################                ##########################
-
-sql_drop_members_table = """DROP TABLE members;"""
-
-sql_drop_properties_table = """DROP TABLE properties;"""
-
-sql_drop_games_table = """DROP TABLE games;"""
-
-k_regular_properties = ("k_regular", 16, None, None, None)
-
-k_tournament_properties = ("k_tournament", 32, None, None, None)
-
-pt_fun_event_win_properties = ("pt_fun_event_win", 16, None, None, None)
-
-pt_fun_event_participation_properties = (
-    "pt_fun_event_participation",
-    8,
-    None,
-    None,
-    None,
-)
-
-num_mutual_games = ("mutual_games", 10, None, None, None)
-
-num_minimal_games = ("minimal_games", 1, None, None, None)
-
-
 ##########################             ##########################
 ########################## DB COMMANDS ##########################
 ##########################             ##########################
@@ -896,17 +868,17 @@ async def league_create_tables(ctx):
 
         sql_db.create_table(conn, sql_create_games_table)
 
-        sql_insert.set_properties(conn, k_regular_properties)
+        sql_insert.set_properties(conn, db_properties.k_regular_properties)
 
-        sql_insert.set_properties(conn, k_tournament_properties)
+        sql_insert.set_properties(conn, db_properties.k_tournament_properties)
 
-        sql_insert.set_properties(conn, pt_fun_event_win_properties)
+        sql_insert.set_properties(conn, db_properties.pt_fun_event_win_properties)
 
-        sql_insert.set_properties(conn, pt_fun_event_participation_properties)
+        sql_insert.set_properties(conn, db_properties.pt_fun_event_participation_properties)
 
-        sql_insert.set_properties(conn, num_mutual_games)
+        sql_insert.set_properties(conn, db_properties.num_mutual_games)
 
-        sql_insert.set_properties(conn, num_minimal_games)
+        sql_insert.set_properties(conn, db_properties.num_minimal_games)
     else:
         print("Error! cannot create the database connection.")
 
@@ -931,17 +903,17 @@ async def league_recreate_tables(ctx):
 
         sql_db.create_table(conn, sql_create_games_table)
 
-        sql_insert.set_properties(conn, k_regular_properties)
+        sql_insert.set_properties(conn, db_properties.k_regular_properties)
 
-        sql_insert.set_properties(conn, k_tournament_properties)
+        sql_insert.set_properties(conn, db_properties.k_tournament_properties)
 
-        sql_insert.set_properties(conn, pt_fun_event_win_properties)
+        sql_insert.set_properties(conn, db_properties.pt_fun_event_win_properties)
 
-        sql_insert.set_properties(conn, pt_fun_event_participation_properties)
+        sql_insert.set_properties(conn, db_properties.pt_fun_event_participation_properties)
 
-        sql_insert.set_properties(conn, num_mutual_games)
+        sql_insert.set_properties(conn, db_properties.num_mutual_games)
 
-        sql_insert.set_properties(conn, num_minimal_games)
+        sql_insert.set_properties(conn, db_properties.num_minimal_games)
 
     else:
         print("Error! cannot create the database connection.")
