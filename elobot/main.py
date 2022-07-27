@@ -118,51 +118,51 @@ def rating(win, K, R, E):
     return Rn
 
 
-def get_member_stats(conn, member_id):
-    """
-    Select and print league statistics for member
-    "param member_id: get stats for ctx.author.id
-    """
-    sql_win = f""" SELECT count(g.winner_id) cnt_win
-                   FROM  members m 
-                   LEFT JOIN games g ON m.member_id=g.winner_id
-                   WHERE 1=1
-                   AND g.fun_event = 0
-                   AND m.member_id={member_id} """
-    cur_w = conn.cursor()
-    cur_w.execute(sql_win)
-    cnt_win = cur_w.fetchone()[0]
+# def sql_select.member_stats(conn, member_id):
+#     """
+#     Select and print league statistics for member
+#     "param member_id: get stats for ctx.author.id
+#     """
+#     sql_win = f""" SELECT count(g.winner_id) cnt_win
+#                    FROM  members m 
+#                    LEFT JOIN games g ON m.member_id=g.winner_id
+#                    WHERE 1=1
+#                    AND g.fun_event = 0
+#                    AND m.member_id={member_id} """
+#     cur_w = conn.cursor()
+#     cur_w.execute(sql_win)
+#     cnt_win = cur_w.fetchone()[0]
 
-    sql_loss = f"""SELECT count(g.looser_id) cnt_loose
-                   FROM  members m 
-                   LEFT JOIN games g ON m.member_id=g.looser_id
-                   WHERE 1=1
-                   AND g.fun_event = 0
-                   AND m.member_id={member_id} """
-    cur_l = conn.cursor()
-    cur_l.execute(sql_loss)
-    cnt_loss = cur_l.fetchone()[0]
+#     sql_loss = f"""SELECT count(g.looser_id) cnt_loose
+#                    FROM  members m 
+#                    LEFT JOIN games g ON m.member_id=g.looser_id
+#                    WHERE 1=1
+#                    AND g.fun_event = 0
+#                    AND m.member_id={member_id} """
+#     cur_l = conn.cursor()
+#     cur_l.execute(sql_loss)
+#     cnt_loss = cur_l.fetchone()[0]
 
-    if cnt_win + cnt_loss > 0:
-        winrate = int(round(cnt_win / (cnt_win + cnt_loss) * 100, 0))
+#     if cnt_win + cnt_loss > 0:
+#         winrate = int(round(cnt_win / (cnt_win + cnt_loss) * 100, 0))
 
-        sql = f""" SELECT member_id, rating, {cnt_win} , {cnt_loss}, {winrate}
-                   from members
-                   where 1=1
-                   and member_id={member_id}; """
-        cur = conn.cursor()
-        cur.execute(sql)
-        rows = cur.fetchall()
-        return rows
-    else:
-        sql = f""" SELECT member_id, rating, {cnt_win} , {cnt_loss}, 0
-                   from members
-                   where 1=1
-                   and member_id={member_id}; """
-        cur = conn.cursor()
-        cur.execute(sql)
-        rows = cur.fetchall()
-        return rows
+#         sql = f""" SELECT member_id, rating, {cnt_win} , {cnt_loss}, {winrate}
+#                    from members
+#                    where 1=1
+#                    and member_id={member_id}; """
+#         cur = conn.cursor()
+#         cur.execute(sql)
+#         rows = cur.fetchall()
+#         return rows
+#     else:
+#         sql = f""" SELECT member_id, rating, {cnt_win} , {cnt_loss}, 0
+#                    from members
+#                    where 1=1
+#                    and member_id={member_id}; """
+#         cur = conn.cursor()
+#         cur.execute(sql)
+#         rows = cur.fetchall()
+#         return rows
 
 
 class UpdateView(discord.ui.View):
@@ -353,7 +353,7 @@ async def status(ctx):
     """Get personal league stats."""
     pos = sql_select.rating_position(conn, ctx.author.id)
     # pos = 1
-    rows = get_member_stats(conn, ctx.author.id)
+    rows = sql_select.member_stats(conn, ctx.author.id)
     for row in rows:
         embed = discord.Embed(
             title="League profile", colour=discord.Colour(0xFFD700)
@@ -419,7 +419,7 @@ async def top(ctx):
     member_list = []
 
     for member in ctx.guild.members:
-        rows = get_member_stats(conn, member.id)
+        rows = sql_select.member_stats(conn, member.id)
         for row in rows:
             wins = row[2]
             losses = row[3]

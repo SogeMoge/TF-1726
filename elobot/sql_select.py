@@ -133,3 +133,49 @@ def curr_date(conn):
     cur.execute("SELECT datetime('now', 'localtime')")
 
     return cur.fetchone()[0]
+
+def member_stats(conn, member_id):
+    """
+    Select and print league statistics for member
+    "param member_id: get stats for ctx.author.id
+    """
+    sql_win = f""" SELECT count(g.winner_id) cnt_win
+                   FROM  members m 
+                   LEFT JOIN games g ON m.member_id=g.winner_id
+                   WHERE 1=1
+                   AND g.fun_event = 0
+                   AND m.member_id={member_id} """
+    cur_w = conn.cursor()
+    cur_w.execute(sql_win)
+    cnt_win = cur_w.fetchone()[0]
+
+    sql_loss = f"""SELECT count(g.looser_id) cnt_loose
+                   FROM  members m 
+                   LEFT JOIN games g ON m.member_id=g.looser_id
+                   WHERE 1=1
+                   AND g.fun_event = 0
+                   AND m.member_id={member_id} """
+    cur_l = conn.cursor()
+    cur_l.execute(sql_loss)
+    cnt_loss = cur_l.fetchone()[0]
+
+    if cnt_win + cnt_loss > 0:
+        winrate = int(round(cnt_win / (cnt_win + cnt_loss) * 100, 0))
+
+        sql = f""" SELECT member_id, rating, {cnt_win} , {cnt_loss}, {winrate}
+                   from members
+                   where 1=1
+                   and member_id={member_id}; """
+        cur = conn.cursor()
+        cur.execute(sql)
+        rows = cur.fetchall()
+        return rows
+    else:
+        sql = f""" SELECT member_id, rating, {cnt_win} , {cnt_loss}, 0
+                   from members
+                   where 1=1
+                   and member_id={member_id}; """
+        cur = conn.cursor()
+        cur.execute(sql)
+        rows = cur.fetchall()
+        return rows
