@@ -57,45 +57,6 @@ def create_connection(db_file):
 conn = create_connection(db)
 
 
-# def create_table(conn, create_table_sql):
-#     """create a table from the create_table_sql statement
-#     :param conn: Connection object
-#     :param create_table_sql: a CREATE TABLE statement
-#     :return:
-#     """
-#     try:
-#         c = conn.cursor()
-#         c.execute(create_table_sql)
-#     except Error as e:
-#         print(e)
-
-
-# def sql_db.drop_table(conn, sql_db.drop_table_sql):
-#     """drop a table from the sql_db.drop_table_sql statement
-#     :param conn: Connection object
-#     :param create_table_sql: a DROP TABLE statement
-#     :return:
-#     """
-#     try:
-#         c = conn.cursor()
-#         c.execute(sql_db.drop_table_sql)
-#     except Error as e:
-#         print(e)
-
-# def sql_update.member(conn, rating):
-#     """
-#     update member's rating and streak
-#     :param conn:
-#     :param rating:
-#     :return: project id
-#     """
-#     sql = """ UPDATE members
-#               SET rating = ?
-#               WHERE member_id = ?"""
-#     cur = conn.cursor()
-#     cur.execute(sql, rating)
-#     conn.commit()
-
 def delta_points(opponent_rating, member_rating):
     """
     Compute delta points for opponents
@@ -118,54 +79,6 @@ def rating(win, K, R, E):
     """
     Rn = round(R + K * (win - E), 2)
     return Rn
-
-
-# def sql_select.member_stats(conn, member_id):
-#     """
-#     Select and print league statistics for member
-#     "param member_id: get stats for ctx.author.id
-#     """
-#     sql_win = f""" SELECT count(g.winner_id) cnt_win
-#                    FROM  members m 
-#                    LEFT JOIN games g ON m.member_id=g.winner_id
-#                    WHERE 1=1
-#                    AND g.fun_event = 0
-#                    AND m.member_id={member_id} """
-#     cur_w = conn.cursor()
-#     cur_w.execute(sql_win)
-#     cnt_win = cur_w.fetchone()[0]
-
-#     sql_loss = f"""SELECT count(g.looser_id) cnt_loose
-#                    FROM  members m 
-#                    LEFT JOIN games g ON m.member_id=g.looser_id
-#                    WHERE 1=1
-#                    AND g.fun_event = 0
-#                    AND m.member_id={member_id} """
-#     cur_l = conn.cursor()
-#     cur_l.execute(sql_loss)
-#     cnt_loss = cur_l.fetchone()[0]
-
-#     if cnt_win + cnt_loss > 0:
-#         winrate = int(round(cnt_win / (cnt_win + cnt_loss) * 100, 0))
-
-#         sql = f""" SELECT member_id, rating, {cnt_win} , {cnt_loss}, {winrate}
-#                    from members
-#                    where 1=1
-#                    and member_id={member_id}; """
-#         cur = conn.cursor()
-#         cur.execute(sql)
-#         rows = cur.fetchall()
-#         return rows
-#     else:
-#         sql = f""" SELECT member_id, rating, {cnt_win} , {cnt_loss}, 0
-#                    from members
-#                    where 1=1
-#                    and member_id={member_id}; """
-#         cur = conn.cursor()
-#         cur.execute(sql)
-#         rows = cur.fetchall()
-#         return rows
-
 
 class UpdateView(discord.ui.View):
     def __init__(self):
@@ -309,7 +222,7 @@ async def builders(ctx):
 
 
 @bot.slash_command(
-    guild_ids=[russian_guild_id], default_permission=False
+    guild_ids=[test_guild_id], default_permission=False
 )
 @permissions.has_role("league admin")
 async def register(ctx, member: discord.Member):
@@ -485,7 +398,7 @@ async def top(ctx):
 
 
 @bot.slash_command(
-    guild_ids=[russian_guild_id], default_permission=False
+    guild_ids=[test_guild_id], default_permission=False
 )
 @permissions.has_role("league")
 async def game(
@@ -634,7 +547,7 @@ async def game(
 
 
 @bot.slash_command(
-    guild_ids=[russian_guild_id], default_permission=False
+    guild_ids=[test_guild_id], default_permission=False
 )
 @permissions.has_role("league admin")
 async def tournament_game(
@@ -758,7 +671,7 @@ async def tournament_game(
 
 
 @bot.slash_command(
-    guild_ids=[russian_guild_id], default_permission=False
+    guild_ids=[test_guild_id], default_permission=False
 )
 @permissions.has_role("league admin")
 async def fun_win(
@@ -783,7 +696,7 @@ async def fun_win(
 
 
 @bot.slash_command(
-    guild_ids=[russian_guild_id], default_permission=False
+    guild_ids=[test_guild_id], default_permission=False
 )
 @permissions.has_role("league admin")
 async def fun_game(
