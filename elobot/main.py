@@ -2,6 +2,7 @@ import os
 import subprocess
 from dotenv import load_dotenv
 from datetime import date
+import random
 
 import sqlite3
 from sqlite3 import Error
@@ -214,6 +215,28 @@ async def builders(ctx):
     )
     view = View(button1, button2, button3, button4)
     await ctx.respond("Squad Builders:", view=view)
+
+
+@bot.slash_command(
+    guild_ids=[test_guild_id, russian_guild_id]
+)  # create a slash command for the supplied guilds
+async def scenario_roll(
+    ctx,
+    rounds_number: Option(int, "№ of rounds", required=True),
+):
+    """Get random scenario list for provided number of rounds"""  # the command description can be supplied as the docstring
+    scenario_list = ['Assault at the Satellite Array', 'Chance Engagement', 'Salvage Mission', 'Scramble the Transmissions']
+    
+    # pick # of random scenario from the list
+    play_list = random.choices(scenario_list, k=rounds_number)
+
+    embed = discord.Embed(
+            title=f"Scenario list for {rounds_number} rounds",
+            colour=discord.Colour.random(),
+        )
+    embed.add_field(name="AMG Wing presents:", value=play_list, inline=False)
+
+    await ctx.respond(embed=embed)
 
 
 #########################                   #########################
