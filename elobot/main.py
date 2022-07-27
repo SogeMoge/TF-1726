@@ -13,6 +13,9 @@ from discord.commands import Option
 from discord.commands import permissions
 from discord.ui import Button, View, Select
 
+# custom bot modules
+import sql_select
+
 intents = discord.Intents().all()
 bot = discord.Bot(intents=intents)
 load_dotenv()
@@ -134,19 +137,19 @@ def update_member(conn, rating):
     conn.commit()
 
 
-def select_rating_sql(conn, member_id):
-    """
-    Query all rows in the tasks table
-    :param conn: the Connection object
-    :param member_id:
-    :return:
-    """
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT rating FROM members WHERE member_id=?", (member_id,)
-    )
+# def select_rating_sql(conn, member_id):
+#     """
+#     Query all rows in the tasks table
+#     :param conn: the Connection object
+#     :param member_id:
+#     :return:
+#     """
+#     cur = conn.cursor()
+#     cur.execute(
+#         "SELECT rating FROM members WHERE member_id=?", (member_id,)
+#     )
 
-    return cur.fetchone()[0]
+#     return cur.fetchone()[0]
 
 
 def select_k_regular(conn):
@@ -252,20 +255,20 @@ def select_mutual_games_played(conn, author_id, member_id):
     return cur.fetchone()[0]
 
 
-def select_rating_position(conn, member_id):
-    """
-    Select current rating position for author
-    :param member_id: author of the command
-    """
-    cur = conn.cursor()
-    sql = f""" SELECT COUNT(member_id) 
-              FROM members 
-              WHERE rating >= (SELECT rating 
-                               FROM members 
-                               WHERE member_id = {member_id})
-              """
-    cur.execute(sql)
-    return cur.fetchone()[0]
+# def select_rating_position(conn, member_id):
+#     """
+#     Select current rating position for author
+#     :param member_id: author of the command
+#     """
+#     cur = conn.cursor()
+#     sql = f""" SELECT COUNT(member_id) 
+#               FROM members 
+#               WHERE rating >= (SELECT rating 
+#                                FROM members 
+#                                WHERE member_id = {member_id})
+#               """
+#     cur.execute(sql)
+#     return cur.fetchone()[0]
 
 
 def select_curr_date(conn):
@@ -552,7 +555,7 @@ async def register(ctx, member: discord.Member):
 @permissions.has_role("league")
 async def status(ctx):
     """Get personal league stats."""
-    pos = select_rating_position(conn, ctx.author.id)
+    pos = sql_select.rating_position(conn, ctx.author.id)
     # pos = 1
     rows = get_member_stats(conn, ctx.author.id)
     for row in rows:
@@ -759,11 +762,13 @@ async def game(
 
     ## extract current rating for message winner
     # winner rating
-    Ra = select_rating_sql(conn, winner.id)
+    # Ra = select_rating_sql(conn, winner.id)
+    Ra = sql_select.rating(conn, winner.id)
 
     ## extract current rating for mentioned looser
     # looser rating
-    Rop = select_rating_sql(conn, looser.id)
+    # Rop = select_rating_sql(conn, looser.id)
+    Rop = sql_select.rating(conn, looser.id)
     ### calculating ELO ###
 
     ## gathered delta points from current game result
@@ -882,11 +887,13 @@ async def tournament_game(
 
     ## extract current rating for message winner
     # winner rating
-    Ra = select_rating_sql(conn, winner.id)
+    # Ra = select_rating_sql(conn, winner.id)
+    Ra = sql_select.rating(conn, winner.id)
 
     ## extract current rating for mentioned looser
     # looser rating
-    Rop = select_rating_sql(conn, looser.id)
+    # Rop = select_rating_sql(conn, looser.id)
+    Rop = sql_select.rating(conn, looser.id)
     ### calculating ELO ###
 
     ## gathered delta points from current game result
@@ -961,7 +968,8 @@ async def fun_win(
     winner: discord.Member,
 ):
     points = select_fun_event_win_points(conn)
-    Ra = select_rating_sql(conn, winner.id)
+    # Ra = select_rating_sql(conn, winner.id)
+    Ra = sql_select.rating(conn, winner.id)
     Rna = Ra + points
     update_member(conn, (Rna, winner.id))
     embed = discord.Embed(
@@ -985,7 +993,8 @@ async def fun_game(
     participant: discord.Member,
 ):
     points = select_fun_event_participation_points(conn)
-    Ra = select_rating_sql(conn, participant.id)
+    # Ra = select_rating_sql(conn, participant.id)
+    Ra = sql_select.rating(conn, participant.id)
     Rna = Ra + points
     update_member(conn, (Rna, participant.id))
     embed = discord.Embed(
