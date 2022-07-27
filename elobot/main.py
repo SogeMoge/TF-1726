@@ -136,79 +136,65 @@ def update_member(conn, rating):
     cur.execute(sql, rating)
     conn.commit()
 
-def select_mutual_games_property(conn):
-    """
-    Query mutual games
-    :param conn: the Connection object
-    :return:
-    """
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT int_value FROM properties WHERE property_name = 'mutual_games'"
-    )
+# def sql_select.minimal_games_property(conn):
+#     """
+#     Query minimal number of games
+#     :param conn: the Connection object
+#     :return:
+#     """
+#     cur = conn.cursor()
+#     cur.execute(
+#         "SELECT int_value FROM properties WHERE property_name = 'minimal_games'"
+#     )
 
-    return cur.fetchone()[0]
-
-
-def select_minimal_games_property(conn):
-    """
-    Query minimal number of games
-    :param conn: the Connection object
-    :return:
-    """
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT int_value FROM properties WHERE property_name = 'minimal_games'"
-    )
-
-    return cur.fetchone()[0]
+#     return cur.fetchone()[0]
 
 
-def select_fun_event_participation_points(conn):
-    """
-    Query prize points for fn event participation
-    :param conn: the Connection object
-    :return:
-    """
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT int_value FROM properties WHERE property_name = 'pt_fun_event_participation'"
-    )
+# def sql_select.fun_event_participation_points(conn):
+#     """
+#     Query prize points for fn event participation
+#     :param conn: the Connection object
+#     :return:
+#     """
+#     cur = conn.cursor()
+#     cur.execute(
+#         "SELECT int_value FROM properties WHERE property_name = 'pt_fun_event_participation'"
+#     )
 
-    return cur.fetchone()[0]
-
-
-def select_fun_event_win_points(conn):
-    """
-    Query prize points for fn event win
-    :param conn: the Connection object
-    :return:
-    """
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT int_value FROM properties WHERE property_name = 'pt_fun_event_win'"
-    )
-
-    return cur.fetchone()[0]
+#     return cur.fetchone()[0]
 
 
-def select_mutual_games_played(conn, author_id, member_id):
-    """
-    Query mutual games played with mentioned user
-    :param conn: the Connection object
-    :param author_id: author of the command
-    :param member_id: member to check
-    :return:
-    """
-    cur = conn.cursor()
-    sql = f""" SELECT COUNT(game_id)
-               FROM games 
-               WHERE tournament = 0
-               AND fun_event = 0
-               AND ((winner_id = {author_id} AND looser_id = {member_id}) OR (winner_id = {member_id} AND looser_id = {author_id}));
-           """
-    cur.execute(sql)
-    return cur.fetchone()[0]
+# def sql_select.fun_event_win_points(conn):
+#     """
+#     Query prize points for fn event win
+#     :param conn: the Connection object
+#     :return:
+#     """
+#     cur = conn.cursor()
+#     cur.execute(
+#         "SELECT int_value FROM properties WHERE property_name = 'pt_fun_event_win'"
+#     )
+
+#     return cur.fetchone()[0]
+
+
+# def sql_select.mutual_games_played(conn, author_id, member_id):
+#     """
+#     Query mutual games played with mentioned user
+#     :param conn: the Connection object
+#     :param author_id: author of the command
+#     :param member_id: member to check
+#     :return:
+#     """
+#     cur = conn.cursor()
+#     sql = f""" SELECT COUNT(game_id)
+#                FROM games 
+#                WHERE tournament = 0
+#                AND fun_event = 0
+#                AND ((winner_id = {author_id} AND looser_id = {member_id}) OR (winner_id = {member_id} AND looser_id = {author_id}));
+#            """
+#     cur.execute(sql)
+#     return cur.fetchone()[0]
 
 
 # def select_rating_position(conn, member_id):
@@ -227,16 +213,16 @@ def select_mutual_games_played(conn, author_id, member_id):
 #     return cur.fetchone()[0]
 
 
-def select_curr_date(conn):
-    """
-    Query date
-    :param conn: the Connection object
-    :return:
-    """
-    cur = conn.cursor()
-    cur.execute("SELECT datetime('now', 'localtime')")
+# def sql_select.curr_date(conn):
+#     """
+#     Query date
+#     :param conn: the Connection object
+#     :return:
+#     """
+#     cur = conn.cursor()
+#     cur.execute("SELECT datetime('now', 'localtime')")
 
-    return cur.fetchone()[0]
+#     return cur.fetchone()[0]
 
 
 def set_properties(conn, properties):
@@ -339,7 +325,7 @@ class UpdateView(discord.ui.View):
         embed = discord.Embed(
             title="League leaderboard", colour=discord.Colour(0xFFD700)
         )
-        min_games = select_minimal_games_property(conn)
+        min_games = sql_select.minimal_games_property(conn)
 
         n = 0
         cur = conn.cursor()
@@ -371,7 +357,7 @@ class UpdateView(discord.ui.View):
                 ),
                 inline=False,
             )
-        min_games = select_minimal_games_property(conn)
+        min_games = sql_select.minimal_games_property(conn)
         await interaction.response.edit_message(
             content=f"Top resuts, played at least {min_games} game(s)\nUpdated from {date.today()}",
             embed=embed,
@@ -550,7 +536,7 @@ async def check(ctx, member: discord.Member):
         )
         await ctx.respond(embed=embed)
         return
-    gcount = select_mutual_games_played(conn, ctx.author.id, member.id)
+    gcount = sql_select.mutual_games_played(conn, ctx.author.id, member.id)
 
     embed = discord.Embed(colour=discord.Colour(0x6790A7))
     embed.add_field(
@@ -575,7 +561,7 @@ async def top(ctx):
     )
     # cursor.execute(f'SELECT COUNT(member_id) FROM rating;')
     # pnum = cursor.fetchone()[0]
-    min_games = select_minimal_games_property(conn)
+    min_games = sql_select.minimal_games_property(conn)
     member_list = []
 
     for member in ctx.guild.members:
@@ -656,8 +642,8 @@ async def game(
     """Submit regular leage game results."""
     role_check = discord.utils.get(ctx.guild.roles, name="league")
 
-    mutual_games_property = select_mutual_games_property(conn)
-    mutual_games_count = select_mutual_games_played(
+    mutual_games_property = sql_select.mutual_games_property(conn)
+    mutual_games_count = sql_select.mutual_games_played(
         conn, winner.id, looser.id
     )
 
@@ -744,7 +730,7 @@ async def game(
     Rnop = rating(0, K, Rop, Eop)
     Rnop_diff = round(Rop - Rnop, 2)
 
-    curr_date = select_curr_date(conn)
+    curr_date = sql_select.curr_date(conn)
     # insert game entry
     game_result = (
         winner.id,
@@ -869,7 +855,7 @@ async def tournament_game(
     Rnop = rating(0, K, Rop, Eop)
     Rnop_diff = round(Rop - Rnop, 2)
 
-    curr_date = select_curr_date(conn)
+    curr_date = sql_select.curr_date(conn)
     # insert game entry
     game_result = (
         winner.id,
@@ -923,7 +909,7 @@ async def fun_win(
     ctx,
     winner: discord.Member,
 ):
-    points = select_fun_event_win_points(conn)
+    points = sql_select.fun_event_win_points(conn)
     # Ra = select_rating_sql(conn, winner.id)
     Ra = sql_select.rating(conn, winner.id)
     Rna = Ra + points
@@ -948,7 +934,7 @@ async def fun_game(
     ctx,
     participant: discord.Member,
 ):
-    points = select_fun_event_participation_points(conn)
+    points = sql_select.fun_event_participation_points(conn)
     # Ra = select_rating_sql(conn, participant.id)
     Ra = sql_select.rating(conn, participant.id)
     Rna = Ra + points
