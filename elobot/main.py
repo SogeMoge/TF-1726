@@ -27,13 +27,20 @@ bot = discord.Bot(intents=intents)
 load_dotenv()
 token = os.environ.get("DISCORD_TOKEN")
 
-
+##### League vars #####
 results_channel_id = int(os.environ.get("RESULTS_CHANNEL_ID"))
 test_guild_id = int(os.environ.get("TEST_GUILD_ID"))
 russian_guild_id = int(os.environ.get("RUSSIAN_GUILD_ID"))
 db_admin_id = int(os.environ.get("DB_ADMIN_ID"))
 db = os.environ.get("DATABASE")
+##### League vars #####
 
+##### Welcome channel vars #####
+channel_welcome_id = int(os.environ.get("CHANNEL_WELCOME_ID"))
+channel_navigation_id= int(os.environ.get("CHANNEL_NAVIGATION_ID"))
+channel_roles_id= int(os.environ.get("CHANNEL_ROLES_ID"))
+channel_location_id= int(os.environ.get("CHANNEL_LOCATION_ID"))
+##### Welcome channel vars #####
 
 update_reaction = "\U0001f504"  # circle arrows
 accept_reactions = ["\U00002705", "\U0000274e"]  # check and cross marks
@@ -134,6 +141,9 @@ class UpdateView(discord.ui.View):
             view=UpdateView(),
         )
 
+#########################                 #########################
+#########################     EVENTS      #########################
+#########################                 #########################
 
 @bot.event
 async def on_ready():
@@ -150,6 +160,27 @@ async def on_ready():
 #     ):
 #         await message.channel.send("hi")
 
+@bot.event
+async def on_member_join(member):
+    channel_welcome = bot.get_channel(channel_welcome_id)
+    channel_navigation = bot.get_channel(channel_navigation_id)
+    channel_roles = bot.get_channel(channel_roles_id)
+    channel_locaton = bot.get_channel(channel_location_id)
+
+    embed = discord.Embed(
+            title="Добро пожаловать, пилот!",
+            colour=discord.Colour.random(),
+            description=f"Поприветствуем {member.mention}"
+    )
+    embed.add_field(name="C чего начать:",
+                    value=f"""Пробегись по трём каналам в разделе SYSTEM:
+                             - {channel_navigation.mention} Узнаешь как здесь ориентироваться 
+                             - {channel_roles.mention} Выберешь подходящие для себя роли
+                             - {channel_locaton.mention} Cможешь рассказать где ты живёшь
+                             Последнее нужно, чтобы легче кооперироваться с другими игроками.""",
+                    inline=False
+    )                                             
+    await channel_welcome.send(embed=embed)
 
 #########################                 #########################
 #########################  INFO COMMANDS  #########################
@@ -226,15 +257,44 @@ async def scenario_roll(
 ):
     """Get random scenario list for provided number of rounds"""  # the command description can be supplied as the docstring
     scenario_list = ['Assault at the Satellite Array', 'Chance Engagement', 'Salvage Mission', 'Scramble the Transmissions']
-    
-    # pick # of random scenario from the list
-    play_list = random.choices(scenario_list, k=rounds_number)
+    if rounds_number in range(1, 4):
+        # pick # of random scenario from the list
+        play_list = random.sample(scenario_list, k=rounds_number)
 
-    embed = discord.Embed(
-            title=f"Scenario list for {rounds_number} rounds",
-            colour=discord.Colour.random(),
+        embed = discord.Embed(
+                title=f"Scenario list for {rounds_number} rounds",
+                colour=discord.Colour.random(),
+            )
+        embed.add_field(name="Set 1:", value=play_list, inline=False)
+    elif rounds_number in range(5, 8):
+        # pick # of random scenario from the list
+        play_list_1 = random.sample(scenario_list, k=4)
+        play_list_2 = random.sample(scenario_list, k=(rounds_number-4))
+
+        embed = discord.Embed(
+                title=f"Scenario list for {rounds_number} rounds",
+                colour=discord.Colour.random(),
+            )
+        embed.add_field(name="Set 1:", value=play_list_1, inline=False)
+        embed.add_field(name="Set 2:", value=play_list_2, inline=False)
+    elif rounds_number < 1:
+        embed = discord.Embed(colour=discord.Colour(0xFF0000))
+        embed.add_field(
+            name="ERROR",
+            value=f"{rounds_number} rounds? Why even bother?",
+            inline=True,
         )
-    embed.add_field(name="AMG Wing presents:", value=play_list, inline=False)
+        await ctx.respond(embed=embed)
+        return
+    else:
+        embed = discord.Embed(colour=discord.Colour(0xFF0000))
+        embed.add_field(
+            name="ERROR",
+            value=f"Do you really want to play {rounds_number} rounds of AMG Wing?",
+            inline=True,
+        )
+        await ctx.respond(embed=embed)
+        return
 
     await ctx.respond(embed=embed)
 
