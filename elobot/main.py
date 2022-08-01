@@ -3,6 +3,8 @@ import subprocess
 from dotenv import load_dotenv
 from datetime import date
 import random
+import re
+import requests,json
 
 import sqlite3
 from sqlite3 import Error
@@ -191,6 +193,25 @@ async def on_member_join(member):
                     inline=False
     )                                             
     await channel_welcome.send(embed=embed)
+
+#########################                 #########################
+####################  LEGACY BUILDER PARCING ######################
+#########################                 #########################
+
+@bot.event
+async def on_message(message):
+    if message.author.bot: #check that author is not the bot itself
+        return
+    elif '://xwing-legacy.com/?f' in message.content:
+        yasb_link = message.content
+        yasb_convert = yasb_link.replace('http://xwing-legacy.com/', 'http://squad2xws.herokuapp.com/yasb/xws') 
+        yasb_xws = requests.get(yasb_convert)
+
+        channel = message.channel
+        
+    await channel.send(yasb_xws.json())
+# http://xwing-legacy.com/ -> http://squad2xws.herokuapp.com/yasb/xws 
+# http://xwing-legacy.com/?f=Separatist%20Alliance&d=v8ZsZ200Z305X115WW207W229Y356X456W248Y542XW470WW367WY542XW470WW367W&sn=Royal%20escort&obs=
 
 #########################                 #########################
 #########################  INFO COMMANDS  #########################
