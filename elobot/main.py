@@ -22,8 +22,18 @@ import sql_db
 import db_properties
 import db_tables
 
+##### Configure logging #####
+import logging
+logger = logging.getLogger('discord')
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler(filename='elobot.log', encoding='utf-8', mode='w')
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+logger.addHandler(handler)
+
 intents = discord.Intents().all()
 bot = discord.Bot(intents=intents)
+
+#### Load .env vars and discord token"
 load_dotenv()
 token = os.environ.get("DISCORD_TOKEN")
 
@@ -205,19 +215,22 @@ async def links(ctx):
     # # embed.set_footer(text=ctx.author.name, icon_url = ctx.author.avatar_url)
     # await ctx.respond(embed=embed)
     button1 = Button(
-        label="Rules Referense",
+        label="X-Wing 2.6 Rules",
         url="https://www.atomicmassgames.com/xwing-documents",
     )
     button2 = Button(
         label="AMG Rules Forum", url="http://bit.ly/xwingrulesforum"
     )
     button3 = Button(
-        label="Buying guide per factions", url="https://bit.ly/2WzBq0c"
+        label="X-Wing Legacy 2.0 Rules", url="https://infinitearenas.com/legacy/docs/"
     )
     button4 = Button(
+        label="Buying guide per factions", url="https://bit.ly/2WzBq0c"
+    )
+    button5 = Button(
         label="Black Market A68", url="https://bit.ly/3DLZuhe"
     )
-    view = View(button1, button2, button3, button4)
+    view = View(button1, button2, button3, button4, button5)
     await ctx.respond("Useful links:", view=view)
 
 
@@ -233,18 +246,21 @@ async def builders(ctx):
     # embed.add_field(name="Launch Bay Next (iOS)", value="https://apple.co/3CToHVX")
     # await ctx.respond(embed=embed)
     button1 = Button(
-        label="YASB 2.0 (Web)", url="https://raithos.github.io"
+        label="YASB 2.6 (Web)", url="https://yasb.app/"
     )
     button2 = Button(
-        label="Launch Bay Next (Web)", url="https://launchbaynext.app"
+        label="YASB Legacy 2.0 (Web)", url="https://xwing-legacy.com/"
     )
     button3 = Button(
-        label="Launch Bay Next (Android)", url="https://bit.ly/3bP3GjG"
+        label="Launch Bay Next (Web)", url="https://launchbaynext.app"
     )
     button4 = Button(
+        label="Launch Bay Next (Android)", url="https://bit.ly/3bP3GjG"
+    )
+    button5 = Button(
         label="Launch Bay Next (iOS)", url="https://apple.co/3CToHVX"
     )
-    view = View(button1, button2, button3, button4)
+    view = View(button1, button2, button3, button4, button5)
     await ctx.respond("Squad Builders:", view=view)
 
 
