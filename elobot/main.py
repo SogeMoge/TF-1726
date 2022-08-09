@@ -198,14 +198,6 @@ async def on_member_join(member):
             colour=discord.Colour.random(),
             description=f"Поприветствуем {member.mention}"
     )
-    # embed.add_field(name="C чего начать:",
-    #                 value=f"""Пробегись по трём каналам в разделе SYSTEM:
-    #                          - {channel_navigation.mention} Узнаешь как здесь ориентироваться
-    #                          - {channel_roles.mention} Выберешь подходящие для себя роли
-    #                          - {channel_locaton.mention} Cможешь рассказать где ты живёшь
-    #                          Последнее нужно, чтобы легче кооперироваться с другими игроками.""",
-    #                 inline=False
-    # )
     embed.add_field(name="C чего начать:",
                     value=f"""Пробегись по трём каналам в разделе **SYSTEM**:\n- {channel_navigation.mention} Узнаешь как здесь ориентироваться\n- {channel_roles.mention} Выберешь подходящие для себя роли\n- {channel_locaton.mention} Расскажи где ты живёшь, *чтобы получить роль своего города*\n""",
                     inline=False
