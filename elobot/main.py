@@ -3,8 +3,12 @@ import subprocess
 from dotenv import load_dotenv
 from datetime import date
 import random
+
+# modules for YASB link parsing
 import re
 import requests,json
+from html import unescape
+import asyncio
 
 import sqlite3
 from sqlite3 import Error
@@ -53,6 +57,15 @@ channel_navigation_id= int(os.environ.get("CHANNEL_NAVIGATION_ID"))
 channel_roles_id= int(os.environ.get("CHANNEL_ROLES_ID"))
 channel_location_id= int(os.environ.get("CHANNEL_LOCATION_ID"))
 ##### Welcome channel vars #####
+
+
+##### YASB PARSING VARS #####
+GITHUB_USER = 'Gan0n29'
+GITHUB_BRANCH = 'xwing-legacy'
+BASE_URL = f"https://raw.githubusercontent.com/{GITHUB_USER}/ttt-xwing-overlay/{GITHUB_BRANCH}/src/assets/plugins/xwing-data2/"
+MANIFEST = 'data/manifest.json'
+check_frequency = 900  # 15 minutes
+##### YASB PARSING WARS #####
 
 update_reaction = "\U0001f504"  # circle arrows
 accept_reactions = ["\U00002705", "\U0000274e"]  # check and cross marks
@@ -179,23 +192,38 @@ async def on_member_join(member):
     channel_roles = bot.get_channel(channel_roles_id)
     channel_locaton = bot.get_channel(channel_location_id)
 
+    
     embed = discord.Embed(
             title="Добро пожаловать, пилот!",
             colour=discord.Colour.random(),
             description=f"Поприветствуем {member.mention}"
     )
+    # embed.add_field(name="C чего начать:",
+    #                 value=f"""Пробегись по трём каналам в разделе SYSTEM:
+    #                          - {channel_navigation.mention} Узнаешь как здесь ориентироваться
+    #                          - {channel_roles.mention} Выберешь подходящие для себя роли
+    #                          - {channel_locaton.mention} Cможешь рассказать где ты живёшь
+    #                          Последнее нужно, чтобы легче кооперироваться с другими игроками.""",
+    #                 inline=False
+    # )
     embed.add_field(name="C чего начать:",
-                    value=f"""Пробегись по трём каналам в разделе SYSTEM:
-                             - {channel_navigation.mention} Узнаешь как здесь ориентироваться 
-                             - {channel_roles.mention} Выберешь подходящие для себя роли
-                             - {channel_locaton.mention} Cможешь рассказать где ты живёшь
-                             Последнее нужно, чтобы легче кооперироваться с другими игроками.""",
+                    value=f"""Пробегись по трём каналам в разделе **SYSTEM**:\n- {channel_navigation.mention} Узнаешь как здесь ориентироваться\n- {channel_roles.mention} Выберешь подходящие для себя роли\n- {channel_locaton.mention} Расскажи где ты живёшь, *чтобы получить роль своего города*\n""",
                     inline=False
-    )                                             
-    await channel_welcome.send(embed=embed)
+    )
+    if member.guild.id == test_guild_id:
+        embed.add_field(name="This is a test",
+                    value="test",
+                    inline=False
+        )
+        channel_welcome = bot.get_channel(757377279474139156)   
+        await channel_welcome.send(embed=embed)
+    elif member.guild.id == russian_guild_id:
+        await channel_welcome.send(embed=embed)
+    else:
+        return
 
 #########################                 #########################
-####################  LEGACY BUILDER PARCING ######################
+####################  LEGACY BUILDER PARSING ######################
 #########################                 #########################
 
 @bot.event
@@ -203,13 +231,35 @@ async def on_message(message):
     if message.author.bot: #check that author is not the bot itself
         return
     elif '://xwing-legacy.com/?f' in message.content:
+        channel = message.channel
+
+        # convert YASB link to XWS
         yasb_link = message.content
-        yasb_convert = yasb_link.replace('http://xwing-legacy.com/', 'http://squad2xws.herokuapp.com/yasb/xws') 
+        yasb_convert = yasb_link.replace('://xwing-legacy.com/', '://squad2xws.herokuapp.com/yasb/xws') 
         yasb_xws = requests.get(yasb_convert)
 
-        channel = message.channel
+        #############
+        yasb_xws = unescape(yasb_xws) # delete all characters which prevents proper parsing
+        yasb_json = yasb_xws.json() # raw XWS in JSON 
+        #############
         
-    await channel.send(yasb_xws.json())
+        # get JSON manifest from ttt-xwing-overlay repo
+        manifest_link = requests.get(BASE_URL + MANIFEST)
+        manifest = manifest_link.json()
+
+        files = (
+            manifest['damagedecks'] +
+            manifest['upgrades'] +
+            [manifest['conditions']] +
+            [ship for faction in manifest['pilots']
+                for ship in faction['ships']]
+        )
+
+        _data = {}
+        loop = asyncio.get_event_loop()
+
+    await channel.send(yasb_json)
+    
 # http://xwing-legacy.com/ -> http://squad2xws.herokuapp.com/yasb/xws 
 # http://xwing-legacy.com/?f=Separatist%20Alliance&d=v8ZsZ200Z305X115WW207W229Y356X456W248Y542XW470WW367WY542XW470WW367W&sn=Royal%20escort&obs=
 
