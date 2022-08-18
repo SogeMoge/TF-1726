@@ -6,7 +6,8 @@ import random
 
 # modules for YASB link parsing
 import re
-import requests,json
+import requests
+import json
 from html import unescape
 import asyncio
 
@@ -224,33 +225,60 @@ async def on_message(message):
         return
     elif '://xwing-legacy.com/?f' in message.content:
         channel = message.channel
-
+        i = 0 # counter for embed message
         # convert YASB link to XWS
         yasb_link = message.content
         yasb_convert = yasb_link.replace('://xwing-legacy.com/', '://squad2xws.herokuapp.com/yasb/xws') 
         yasb_xws = requests.get(yasb_convert)
 
         #############
+        # don't know if it works at all???
         yasb_xws = unescape(yasb_xws) # delete all characters which prevents proper parsing
-        yasb_json = yasb_xws.json() # raw XWS in JSON 
+
+        yasb_json = yasb_xws.json() # raw XWS in JSON
+        yasb_json = json.dumps(yasb_json) # convert single quotes to double quotes
+        yasb_dict = json.loads(yasb_json) # convert JSON to python object
+        # yasb_json = json.dumps(yasb_json, indent=4) # make outpud pretty
         #############
-        
-        # get JSON manifest from ttt-xwing-overlay repo
-        manifest_link = requests.get(BASE_URL + MANIFEST)
-        manifest = manifest_link.json()
+        embed = discord.Embed(
+            title="YASB Legacy 2.0",
+            colour=discord.Colour.random(),
+            description=message.content
+    )
+        # # get JSON manifest from ttt-xwing-overlay repo
+        # manifest_link = requests.get(BASE_URL + MANIFEST)
+        # manifest = manifest_link.json()
 
-        files = (
-            manifest['damagedecks'] +
-            manifest['upgrades'] +
-            [manifest['conditions']] +
-            [ship for faction in manifest['pilots']
-                for ship in faction['ships']]
-        )
+        # files = (
+        #     manifest['damagedecks'] +
+        #     manifest['upgrades'] +
+        #     [manifest['conditions']] +
+        #     [ship for faction in manifest['pilots']
+        #         for ship in faction['ships']]
+        # )
 
-        _data = {}
-        loop = asyncio.get_event_loop()
+        # _data = {}
+        # loop = asyncio.get_event_loop()
+        # # get JSON manifest from ttt-xwing-overlay repo
+    
+    for key, value in yasb_dict.items(): # add embed fields with faction and list name
+        if key in ["faction","name"]:
+            embed.add_field(name=key,
+                        value=value,
+                        inline=True
+            )
+    for pilot in yasb_dict["pilots"]: # add embed fields for each pilot in a list
+        i+=1
+        embed.add_field(name=f"pilot {i}",
+                        value=pilot,
+                        inline=False
+            )
+    await channel.send(embed=embed)
+    # await channel.send(yasb_dict["pilots"][0])
+    # await channel.send(yasb_dict["pilots"][1])
+    # await channel.send(yasb_dict["pilots"][2])
+    # await channel.send(yasb_dict["pilots"][3])
 
-    await channel.send(yasb_json)
     
 # http://xwing-legacy.com/ -> http://squad2xws.herokuapp.com/yasb/xws 
 # http://xwing-legacy.com/?f=Separatist%20Alliance&d=v8ZsZ200Z305X115WW207W229Y356X456W248Y542XW470WW367WY542XW470WW367W&sn=Royal%20escort&obs=
