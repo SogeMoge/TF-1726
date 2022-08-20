@@ -225,7 +225,7 @@ async def on_message(message):
         return
     elif '://xwing-legacy.com/?f' in message.content:
         yasb_channel = message.channel
-        i = 0 # counter for embed message
+
         # convert YASB link to XWS
         yasb_link = message.content
         yasb_convert = yasb_link.replace('://xwing-legacy.com/', '://squad2xws.herokuapp.com/yasb/xws') 
@@ -238,7 +238,6 @@ async def on_message(message):
         yasb_json = yasb_xws.json() # raw XWS in JSON
         yasb_json = json.dumps(yasb_json) # convert single quotes to double quotes
         yasb_dict = json.loads(yasb_json) # convert JSON to python object
-        # yasb_json = json.dumps(yasb_json, indent=4) # make outpud pretty
         #############
         for key, value in yasb_dict.items(): # add embed title with list name as hyperlink
             if key in ["name"]:
@@ -248,9 +247,12 @@ async def on_message(message):
                     url=message.content,
                     description="YASB Legacy 2.0 list"
                 )
+
         embed.set_footer(
             text=message.author.display_name, icon_url=message.author.display_avatar
         )
+
+        ####### TO DO ######## compare parsed results to data in xwing-data manifest
         # # get JSON manifest from ttt-xwing-overlay repo
         # manifest_link = requests.get(BASE_URL + MANIFEST)
         # manifest = manifest_link.json()
@@ -273,22 +275,13 @@ async def on_message(message):
                         value=value,
                         inline=True
             )
-    # for pilot in yasb_dict["pilots"]: # add embed fields for each pilot in a list
-    #     i+=1
-    #     embed.add_field(name=f"pilot {i}",
-    #                     value=pilot,
-    #                     inline=False
-    #         )
 
     pilots_total = len(yasb_dict["pilots"])
 
     for pilot in range(pilots_total): # add embed fields for each pilot in a list
         embed.add_field(name=yasb_dict["pilots"][pilot]["id"],
                         # value=list(yasb_dict["pilots"][pilot]["upgrades"].values()),
-                        # value = ("[{0}]".format(', '.join(map(str, list(yasb_dict["pilots"][pilot]["upgrades"].values()))))),
-                        # value=list(yasb_dict["pilots"][pilot]["upgrades"].values()),
                         value=re.sub(r"[\[\]\']",'\u200b',str(list(yasb_dict["pilots"][pilot]["upgrades"].values()))),
-                        # value = str(list(yasb_dict["pilots"][pilot]["upgrades"].values())).strip("[]"),
                         inline=False
             )
     await yasb_channel.send(embed=embed)
