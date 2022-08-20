@@ -283,13 +283,13 @@ async def on_message(message):
     pilots_total = len(yasb_dict["pilots"])
 
     for pilot in range(pilots_total): # add embed fields for each pilot in a list
-        embed.add_field(name = yasb_dict["pilots"][pilot]["id"],
+        embed.add_field(name=yasb_dict["pilots"][pilot]["id"],
                         # value=list(yasb_dict["pilots"][pilot]["upgrades"].values()),
                         # value = ("[{0}]".format(', '.join(map(str, list(yasb_dict["pilots"][pilot]["upgrades"].values()))))),
                         # value=list(yasb_dict["pilots"][pilot]["upgrades"].values()),
-                        value = re.sub(r"[\[\]\']",'',str(list(yasb_dict["pilots"][pilot]["upgrades"].values()))),
+                        value=re.sub(r"[\[\]\']",'\u200b',str(list(yasb_dict["pilots"][pilot]["upgrades"].values()))),
                         # value = str(list(yasb_dict["pilots"][pilot]["upgrades"].values())).strip("[]"),
-                        inline = False
+                        inline=False
             )
     await yasb_channel.send(embed=embed)
     await message.delete()
