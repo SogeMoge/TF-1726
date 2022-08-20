@@ -224,7 +224,7 @@ async def on_message(message):
     if message.author.bot: #check that author is not the bot itself
         return
     elif '://xwing-legacy.com/?f' in message.content:
-        channel = message.channel
+        yasb_channel = message.channel
         i = 0 # counter for embed message
         # convert YASB link to XWS
         yasb_link = message.content
@@ -240,11 +240,17 @@ async def on_message(message):
         yasb_dict = json.loads(yasb_json) # convert JSON to python object
         # yasb_json = json.dumps(yasb_json, indent=4) # make outpud pretty
         #############
-        embed = discord.Embed(
-            title="YASB Legacy 2.0",
-            colour=discord.Colour.random(),
-            description=message.content
-    )
+        for key, value in yasb_dict.items(): # add embed title with list name as hyperlink
+            if key in ["name"]:
+                embed = discord.Embed(
+                    title=value,
+                    colour=discord.Colour.random(),
+                    url=message.content,
+                    description="YASB Legacy 2.0 list"
+                )
+        embed.set_footer(
+            text=message.author.display_name, icon_url=message.author.display_avatar
+        )
         # # get JSON manifest from ttt-xwing-overlay repo
         # manifest_link = requests.get(BASE_URL + MANIFEST)
         # manifest = manifest_link.json()
@@ -262,19 +268,33 @@ async def on_message(message):
         # # get JSON manifest from ttt-xwing-overlay repo
     
     for key, value in yasb_dict.items(): # add embed fields with faction and list name
-        if key in ["faction","name"]:
+        if key in ["faction"]:
             embed.add_field(name=key,
                         value=value,
                         inline=True
             )
-    for pilot in yasb_dict["pilots"]: # add embed fields for each pilot in a list
-        i+=1
-        embed.add_field(name=f"pilot {i}",
-                        value=pilot,
-                        inline=False
+    # for pilot in yasb_dict["pilots"]: # add embed fields for each pilot in a list
+    #     i+=1
+    #     embed.add_field(name=f"pilot {i}",
+    #                     value=pilot,
+    #                     inline=False
+    #         )
+
+    pilots_total = len(yasb_dict["pilots"])
+
+    for pilot in range(pilots_total): # add embed fields for each pilot in a list
+        embed.add_field(name = yasb_dict["pilots"][pilot]["id"],
+                        # value=list(yasb_dict["pilots"][pilot]["upgrades"].values()),
+                        # value = ("[{0}]".format(', '.join(map(str, list(yasb_dict["pilots"][pilot]["upgrades"].values()))))),
+                        # value=list(yasb_dict["pilots"][pilot]["upgrades"].values()),
+                        value = re.sub(r"[\[\]\']",'',str(list(yasb_dict["pilots"][pilot]["upgrades"].values()))),
+                        # value = str(list(yasb_dict["pilots"][pilot]["upgrades"].values())).strip("[]"),
+                        inline = False
             )
-    await channel.send(embed=embed)
-    # await channel.send(yasb_dict["pilots"][0])
+    await yasb_channel.send(embed=embed)
+    await message.delete()
+    # await yasb_channel.send(yasb_dict["pilots"][0]["id"])
+    # await yasb_channel.send(len(yasb_dict["pilots"]))
     # await channel.send(yasb_dict["pilots"][1])
     # await channel.send(yasb_dict["pilots"][2])
     # await channel.send(yasb_dict["pilots"][3])
