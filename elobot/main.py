@@ -17,9 +17,10 @@ from sqlite3 import Error
 
 import discord
 from discord import app_commands
+from discord.ext import commands
 from discord.utils import get
-from discord.commands import Option
-from discord.commands import permissions
+# from discord.commands import Option
+# from discord.commands import permissions
 from discord.ui import Button, View
 
 # custom bot modules
@@ -43,7 +44,7 @@ handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(me
 logger.addHandler(handler)
 
 intents = discord.Intents().all()
-bot = discord.Bot(intents=intents)
+bot = discord.Client(intents=intents)
 
 #### Load .env vars and discord token"
 load_dotenv()
@@ -315,7 +316,7 @@ async def on_message(message):
 #########################  INFO COMMANDS  #########################
 #########################                 #########################
 
-@bot.slash_command(
+@app_commands.command(
     guild_ids=[test_guild_id, russian_guild_id]
 )  # create a slash command for the supplied guilds
 async def links(ctx):
