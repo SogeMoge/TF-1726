@@ -1,13 +1,15 @@
+"""select queries"""
+
 def rating_position(conn, member_id):
     """
     Select current rating position for author
     :param member_id: author of the command
     """
     cur = conn.cursor()
-    sql = f""" SELECT COUNT(member_id) 
-              FROM members 
-              WHERE rating >= (SELECT rating 
-                               FROM members 
+    sql = f""" SELECT COUNT(member_id)
+              FROM members
+              WHERE rating >= (SELECT rating
+                               FROM members
                                WHERE member_id = {member_id})
               """
     cur.execute(sql)

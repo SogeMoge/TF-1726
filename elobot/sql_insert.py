@@ -1,14 +1,13 @@
+"""sql queries with db manipulation (insert)"""
+
 def statement(conn, sql_querry):
     """execute querry from sql_querry statement
     :param conn: Connection object
     :param sql_querry: a SQL statement
     :return:
     """
-    try:
-        c = conn.cursor()
-        c.execute(sql_querry)
-    except Error as e:
-        print(e)
+    db_cursor = conn.cursor()
+    db_cursor.execute(sql_querry)
 
 def set_properties(conn, properties):
     """
@@ -17,12 +16,17 @@ def set_properties(conn, properties):
     :param project:
     :return: project id
     """
-    sql = """ INSERT INTO properties(property_name,int_value,float_value,char_value,date_value)
+    sql = """ INSERT INTO properties\
+              (property_name,\
+              int_value,\
+              float_value,\
+              char_value,\
+              date_value)
               VALUES(?,?,?,?,?) """
-    cur = conn.cursor()
-    cur.execute(sql, properties)
+    db_cursor = conn.cursor()
+    db_cursor.execute(sql, properties)
     conn.commit()
-    return cur.lastrowid
+    return db_cursor.lastrowid
 
 def tournament_win(conn, game_result):
     """
@@ -31,12 +35,20 @@ def tournament_win(conn, game_result):
     :param win_result:
     :return: game id
     """
-    sql = """ INSERT INTO games (winner_id,winner_score,winner_rating_diff,looser_id,looser_score,looser_rating_diff,tournament,game_date)
+    sql = """ INSERT INTO games \
+              (winner_id,\
+              winner_score,\
+              winner_rating_diff,\
+              looser_id,\
+              looser_score,\
+              looser_rating_diff,\
+              tournament,\
+              game_date)
               VALUES(?,?,?,?,?,?,?,?) """
-    cur = conn.cursor()
-    cur.execute(sql, game_result)
+    db_cursor = conn.cursor()
+    db_cursor.execute(sql, game_result)
     conn.commit()
-    return cur.lastrowid
+    return db_cursor.lastrowid
 
 def regular_win(conn, game_result):
     """
@@ -45,9 +57,15 @@ def regular_win(conn, game_result):
     :param win_result:
     :return: game id
     """
-    sql = """ INSERT INTO games (winner_id,winner_score,winner_rating_diff,looser_id,looser_score,looser_rating_diff,game_date)
+    sql = """ INSERT INTO games \
+              (winner_id,\
+              winner_score,\
+              winner_rating_diff,\
+              looser_id,looser_score,\
+              looser_rating_diff,\
+              game_date)
               VALUES(?,?,?,?,?,?,?) """
-    cur = conn.cursor()
-    cur.execute(sql, game_result)
+    db_cursor = conn.cursor()
+    db_cursor.execute(sql, game_result)
     conn.commit()
-    return cur.lastrowid
+    return db_cursor.lastrowid

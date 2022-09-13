@@ -1,8 +1,6 @@
-##########################             ##########################
-##########################  DB TABLES  ##########################
-##########################             ##########################
+"""db table create and drop qieries"""
 
-sql_create_members_table = """CREATE TABLE IF NOT EXISTS members (
+SQL_CREATE_MEMBERS_TABLE = """CREATE TABLE IF NOT EXISTS members (
                                 member_id integer UNIQUE PRIMARY KEY,
                                 member_name text NOT NULL,
                                 win_streak integer DEFAULT 0,
@@ -11,7 +9,7 @@ sql_create_members_table = """CREATE TABLE IF NOT EXISTS members (
 
 # To-DO CREATE STAT VIEW
 
-sql_create_properties_table = """CREATE TABLE IF NOT EXISTS properties (
+SQL_CREATE_PROPERTIES_TABLE = """CREATE TABLE IF NOT EXISTS properties (
                                 id integer PRIMARY KEY autoincrement,
                                 property_name text NOT NULL,
                                 int_value integer,
@@ -20,7 +18,7 @@ sql_create_properties_table = """CREATE TABLE IF NOT EXISTS properties (
                                 date_value date
                             );"""
 
-sql_create_games_table = """CREATE TABLE IF NOT EXISTS games (
+SQL_CREATE_GAMES_TABLE = """CREATE TABLE IF NOT EXISTS games (
                                 game_id integer UNIQUE PRIMARY KEY autoincrement,
                                 winner_id integer REFERENCES members(member_id),
                                 winner_score integer NOT NULL,
@@ -33,8 +31,8 @@ sql_create_games_table = """CREATE TABLE IF NOT EXISTS games (
                                 game_date date NOT NULL
                             );"""
 
-sql_drop_members_table = """DROP TABLE members;"""
+SQL_DROP_MEMBERS_TABLE = """DROP TABLE members;"""
 
-sql_drop_properties_table = """DROP TABLE properties;"""
+SQL_DROP_PROPERTIES_TABLE = """DROP TABLE properties;"""
 
-sql_drop_games_table = """DROP TABLE games;"""
+SQL_DROP_GAMES_TABLE = """DROP TABLE games;"""

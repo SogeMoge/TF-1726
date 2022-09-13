@@ -1,3 +1,5 @@
+"""main module with slash commands and on_event triggers"""
+
 import os
 import subprocess
 from dotenv import load_dotenv
@@ -32,7 +34,7 @@ import db_tables
 ##### Configure logging #####
 import logging
 logger = logging.getLogger('discord')
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(filename='elobot.log', encoding='utf-8', mode='w')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
@@ -65,10 +67,10 @@ GITHUB_USER = 'Gan0n29'
 GITHUB_BRANCH = 'xwing-legacy'
 BASE_URL = f"https://raw.githubusercontent.com/{GITHUB_USER}/ttt-xwing-overlay/{GITHUB_BRANCH}/src/assets/plugins/xwing-data2/"
 MANIFEST = 'data/manifest.json'
-check_frequency = 900  # 15 minutes
+CHECK_FREQUENCY = 900  # 15 minutes
 ##### YASB PARSING WARS #####
 
-update_reaction = "\U0001f504"  # circle arrows
+UPDATE_REACTION = "\U0001f504"  # circle arrows
 accept_reactions = ["\U00002705", "\U0000274e"]  # check and cross marks
 date = date.today()
 
@@ -122,7 +124,7 @@ class UpdateView(discord.ui.View):
         custom_id="update1",
         label="Update",
         style=discord.ButtonStyle.primary,
-        emoji=update_reaction,
+        emoji=UPDATE_REACTION,
     )
     async def button_callback(self, button, interaction):
         embed = discord.Embed(
@@ -223,7 +225,8 @@ async def on_member_join(member):
 async def on_message(message):
     if message.author.bot: #check that author is not the bot itself
         return
-    elif '://xwing-legacy.com/?f' in message.content:
+    
+    if '://xwing-legacy.com/?f' in message.content:
         yasb_channel = message.channel
 
         # convert YASB link to XWS
@@ -449,7 +452,7 @@ async def register(ctx, member: discord.Member):
         await member.add_roles(role)
         # pretty outpun in chat
         embed = discord.Embed(
-            title=f"Registration successful\nWelcome to the league!",
+            title="Registration successful\nWelcome to the league!",
             colour=discord.Colour(0x6790A7),
         )
         embed.set_footer(
@@ -547,7 +550,7 @@ async def top(ctx):
 
     if not member_list:  # do this!
         await ctx.respond(
-            f"Nobody has reached minimum number of games, play more!"
+            "Nobody has reached minimum number of games, play more!"
         )
         return
 
@@ -571,7 +574,7 @@ async def top(ctx):
     # button = Button(
     #     label="Update",
     #     style=discord.ButtonStyle.primary,
-    #     emoji=update_reaction,
+    #     emoji=UPDATE_REACTION,
     # )
 
     # async def button_callback(interaction):
@@ -964,7 +967,7 @@ async def league_create_tables(ctx):
     else:
         print("Error! cannot create the database connection.")
 
-    await ctx.respond(f"Tables created!")
+    await ctx.respond("Tables created!")
 
 
 @bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
@@ -973,17 +976,17 @@ async def league_recreate_tables(ctx):
     """Drop and Create tables for fresh start"""
     if conn is not None:
 
-        sql_db.drop_table(conn, db_tables.sql_drop_members_table)
+        sql_db.drop_table(conn, db_tables.SQL_DROP_MEMBERS_TABLE)
 
-        sql_db.drop_table(conn, db_tables.sql_drop_properties_table)
+        sql_db.drop_table(conn, db_tables.SQL_DROP_PROPERTIES_TABLE)
 
-        sql_db.drop_table(conn, db_tables.sql_drop_games_table)
+        sql_db.drop_table(conn, db_tables.SQL_DROP_GAMES_TABLE)
 
-        sql_db.create_table(conn, db_tables.sql_create_members_table)
+        sql_db.create_table(conn, db_tables.SQL_CREATE_MEMBERS_TABLE)
 
-        sql_db.create_table(conn, db_tables.sql_create_properties_table)
+        sql_db.create_table(conn, db_tables.SQL_CREATE_PROPERTIES_TABLE)
 
-        sql_db.create_table(conn, db_tables.sql_create_games_table)
+        sql_db.create_table(conn, db_tables.SQL_CREATE_GAMES_TABLE)
 
         sql_insert.set_properties(conn, db_properties.k_regular_properties)
 
@@ -1000,7 +1003,7 @@ async def league_recreate_tables(ctx):
     else:
         print("Error! cannot create the database connection.")
 
-    await ctx.respond(f"Tables recreated!")
+    await ctx.respond("Tables recreated!")
 
 
 # SELECT *

@@ -1,6 +1,4 @@
-##########################                ##########################
-##########################  DB PROPERTIES ##########################
-##########################                ##########################
+"""Existing league porperties stored in db"""
 
 k_regular_properties = ("k_regular", 16, None, None, None)
 
