@@ -16,7 +16,7 @@ import sqlite3
 from sqlite3 import Error
 
 import discord
-from discord.ext import commands
+from discord import app_commands
 from discord.utils import get
 from discord.commands import Option
 from discord.commands import permissions
@@ -297,7 +297,11 @@ async def on_message(message):
     for pilot in range(pilots_total): # add embed fields for each pilot in a list
         embed.add_field(name=yasb_dict["pilots"][pilot]["id"],
                         # value=list(yasb_dict["pilots"][pilot]["upgrades"].values()),
-                        value=re.sub(r"[\[\]\']",'\u200b',str(list(yasb_dict["pilots"][pilot]["upgrades"].values()))),
+                        value=re.sub(
+                            r"[\[\]\']",
+                            '\u200b',
+                            str(list(yasb_dict["pilots"][pilot]["upgrades"].values()))
+                        ),
                         inline=False
             )
     await yasb_channel.send(embed=embed)
@@ -341,7 +345,7 @@ async def links(ctx):
     guild_ids=[test_guild_id, russian_guild_id]
 )  # create a slash command for the supplied guilds
 async def builders(ctx):
-    """Squad Builders for X-Wing from comunity"""  # the command description can be supplied as the docstring
+    """Squad Builders for X-Wing from comunity"""  
 
     button1 = Button(
         label="YASB 2.6 (Web)", url="https://yasb.app/"
@@ -369,7 +373,8 @@ async def scenario_roll(
     ctx,
     rounds_number: Option(int, "№ of rounds", required=True),
 ):
-    """Get random scenario list for provided number of rounds"""  # the command description can be supplied as the docstring
+    """Get random scenario list for provided number of rounds"""  
+
     scenario_list = [
         'Assault at the Satellite Array',
         'Chance Engagement',
