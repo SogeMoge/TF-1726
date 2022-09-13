@@ -1,8 +1,7 @@
 """main module with slash commands and on_event triggers"""
 
 import os
-import subprocess
-from dotenv import load_dotenv
+#import subprocess
 from datetime import date
 import random
 
@@ -11,7 +10,7 @@ import re
 import requests
 import json
 from html import unescape
-import asyncio
+#import asyncio
 
 import sqlite3
 from sqlite3 import Error
@@ -21,7 +20,7 @@ from discord.ext import commands
 from discord.utils import get
 from discord.commands import Option
 from discord.commands import permissions
-from discord.ui import Button, View, Select
+from discord.ui import Button, View
 
 # custom bot modules
 import sql_select
@@ -33,6 +32,10 @@ import db_tables
 
 ##### Configure logging #####
 import logging
+
+##### load vars #####
+from dotenv import load_dotenv
+
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
 handler = logging.FileHandler(filename='elobot.log', encoding='utf-8', mode='w')
@@ -289,11 +292,6 @@ async def on_message(message):
             )
     await yasb_channel.send(embed=embed)
     await message.delete()
-    # await yasb_channel.send(yasb_dict["pilots"][0]["id"])
-    # await yasb_channel.send(len(yasb_dict["pilots"]))
-    # await channel.send(yasb_dict["pilots"][1])
-    # await channel.send(yasb_dict["pilots"][2])
-    # await channel.send(yasb_dict["pilots"][3])
 
     
 # http://xwing-legacy.com/ -> http://squad2xws.herokuapp.com/yasb/xws 
@@ -303,24 +301,12 @@ async def on_message(message):
 #########################  INFO COMMANDS  #########################
 #########################                 #########################
 
-# @bot.slash_command(guild_ids=[test_guild_id])  # create a slash command for the supplied guilds
-# async def hello(ctx):
-#     """Say hello to the bot"""  # the command description can be supplied as the docstring
-#     await ctx.respond(f"Hello, {ctx.author.display_name}!")
-
-
 @bot.slash_command(
     guild_ids=[test_guild_id, russian_guild_id]
 )  # create a slash command for the supplied guilds
 async def links(ctx):
     """Useful X-Wing resources"""  # the command description can be supplied as the docstring
-    # embed = discord.Embed(title="X-Wing resources", colour=discord.Colour(0xFFD700))
-    # embed.add_field(name="Actual Rules documents", value="https://www.atomicmassgames.com/xwing-documents", inline=True)
-    # embed.add_field(name="Official AMG Rules Forum", value="http://bit.ly/xwingrulesforum", inline=False)
-    # embed.add_field(name="Buying guide", value="https://bit.ly/2WzBq0c", inline=False)
-    # embed.add_field(name="Black Market A68", value="https://bit.ly/3DLZuhe")
-    # # embed.set_footer(text=ctx.author.name, icon_url = ctx.author.avatar_url)
-    # await ctx.respond(embed=embed)
+
     button1 = Button(
         label="X-Wing 2.6 Rules",
         url="https://www.atomicmassgames.com/xwing-documents",
@@ -346,12 +332,7 @@ async def links(ctx):
 )  # create a slash command for the supplied guilds
 async def builders(ctx):
     """Squad Builders for X-Wing from comunity"""  # the command description can be supplied as the docstring
-    # embed = discord.Embed(title="X-Wing builders", colour=discord.Colour(0xFFD700))
-    # embed.add_field(name="YASB 2.0 (Web)", value="https://raithos.github.io", inline=True)
-    # embed.add_field(name="Launch Bay Next (Web)", value="https://launchbaynext.app", inline=False)
-    # embed.add_field(name="Launch Bay Next (Android)", value="https://bit.ly/3bP3GjG", inline=False)
-    # embed.add_field(name="Launch Bay Next (iOS)", value="https://apple.co/3CToHVX")
-    # await ctx.respond(embed=embed)
+
     button1 = Button(
         label="YASB 2.6 (Web)", url="https://yasb.app/"
     )
@@ -571,37 +552,6 @@ async def top(ctx):
         view=UpdateView(),
     )
 
-    # button = Button(
-    #     label="Update",
-    #     style=discord.ButtonStyle.primary,
-    #     emoji=UPDATE_REACTION,
-    # )
-
-    # async def button_callback(interaction):
-    #     # await interaction.response.edit_massage(content="Updated results from {date}", embed=embed)
-    #     embed = discord.Embed(
-    #         title="League leaderboard", colour=discord.Colour(0xFFD700)
-    #     )
-    #     n = 0
-    #     cur = conn.cursor()
-    #     for row in cur.execute(
-    #         f'SELECT member_name||" - "||rating FROM members ORDER BY rating DESC;'
-    #     ):
-    #         n = n + 1
-    #         embed.add_field(
-    #             name="\u200b",
-    #             value="{} - {}".format(n, row[0]),
-    #             inline=False,
-    #         )
-    #     await interaction.response.edit_message(
-    #         content=f"Updated from {date}", embed=embed, view=view
-    #     )
-
-    # button.callback = button_callback
-
-    # view = View(button, timeout=None)
-    # await ctx.send(f"Results from {date}", embed=embed, view=view)
-
 
 @bot.slash_command(
     guild_ids=[test_guild_id], default_permission=False
@@ -629,7 +579,8 @@ async def game(
         )
         await ctx.respond(embed=embed)
         return
-    elif ctx.author.id not in [winner.id, looser.id]:
+    
+    if ctx.author.id not in [winner.id, looser.id]:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
@@ -638,7 +589,8 @@ async def game(
         )
         await ctx.respond(embed=embed)
         return
-    elif role_check not in winner.roles:
+    
+    if role_check not in winner.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
@@ -649,7 +601,8 @@ async def game(
         )
         await ctx.respond(embed=embed)
         return
-    elif role_check not in looser.roles:
+    
+    if role_check not in looser.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
@@ -660,7 +613,7 @@ async def game(
         )
         await ctx.respond(embed=embed)
         return
-    elif mutual_games_count >= mutual_games_property:
+    if mutual_games_count >= mutual_games_property:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
@@ -773,7 +726,8 @@ async def tournament_game(
         )
         await ctx.respond(embed=embed)
         return
-    elif role_check not in winner.roles:
+    
+    if role_check not in winner.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
@@ -784,7 +738,8 @@ async def tournament_game(
         )
         await ctx.respond(embed=embed)
         return
-    elif role_check not in looser.roles:
+    
+    if role_check not in looser.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
@@ -870,7 +825,7 @@ async def tournament_game(
         text=looser.display_name, icon_url=looser.display_avatar
     )
 
-    msg = await ctx.respond(
+    await ctx.respond(
         f"(Game {game_id}): {winner.display_name} won in a tournament against {looser.display_name} with {winner_points} - {looser_points} score!"
     )
     await ctx.send(embeds=[embed_win, embed_loss])
@@ -947,11 +902,11 @@ async def league_create_tables(ctx):
     """Create tables first time"""
     if conn is not None:
 
-        sql_db.create_table(conn, db_tables.sql_create_members_table)
+        sql_db.create_table(conn, db_tables.SQL_CREATE_MEMBERS_TABLE)
 
-        sql_db.create_table(conn, db_tables.sql_create_properties_table)
+        sql_db.create_table(conn, db_tables.SQL_CREATE_PROPERTIES_TABLE)
 
-        sql_db.create_table(conn, db_tables.sql_create_games_table)
+        sql_db.create_table(conn, db_tables.SQL_CREATE_GAMES_TABLE)
 
         sql_insert.set_properties(conn, db_properties.k_regular_properties)
 

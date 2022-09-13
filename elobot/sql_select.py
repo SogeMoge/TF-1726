@@ -55,7 +55,7 @@ def k_tournament(conn):
 
     return cur.fetchone()[0]
 
-def select_mutual_games_property(conn):
+def mutual_games_property(conn):
     """
     Query mutual games
     :param conn: the Connection object
@@ -172,12 +172,12 @@ def member_stats(conn, member_id):
         cur.execute(sql)
         rows = cur.fetchall()
         return rows
-    else:
-        sql = f""" SELECT member_id, rating, {cnt_win} , {cnt_loss}, 0
-                   from members
-                   where 1=1
-                   and member_id={member_id}; """
-        cur = conn.cursor()
-        cur.execute(sql)
-        rows = cur.fetchall()
-        return rows
+    
+    sql = f""" SELECT member_id, rating, {cnt_win} , {cnt_loss}, 0
+               from members
+               where 1=1
+               and member_id={member_id}; """
+    cur = conn.cursor()
+    cur.execute(sql)
+    rows = cur.fetchall()
+    return rows

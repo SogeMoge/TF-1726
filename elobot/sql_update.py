@@ -1,3 +1,5 @@
+"""Update rating query"""
+
 def member(conn, rating):
     """
     update member's rating and streak
