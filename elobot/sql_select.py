@@ -172,7 +172,7 @@ def member_stats(conn, member_id):
         cur.execute(sql)
         rows = cur.fetchall()
         return rows
-    
+
     sql = f""" SELECT member_id, rating, {cnt_win} , {cnt_loss}, 0
                from members
                where 1=1

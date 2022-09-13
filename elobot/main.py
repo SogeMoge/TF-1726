@@ -142,13 +142,13 @@ class UpdateView(discord.ui.View):
                 from members m
                 left join
                 (select m.member_id, count(g.winner_id) cnt_win
-                from  members m 
+                from  members m
                 left JOIN games g ON m.member_id=g.winner_id
                 group by m.member_id
                 ) a on m.member_id = a.member_id
                 left join
                 (select m.member_id, count(g.looser_id) cnt_loose
-                from  members m 
+                from  members m
                 left JOIN games g ON m.member_id=g.looser_id
                 group by m.member_id
                 ) b on m.member_id = b.member_id
@@ -198,7 +198,7 @@ async def on_member_join(member):
     channel_roles = bot.get_channel(channel_roles_id)
     channel_locaton = bot.get_channel(channel_location_id)
 
-    
+
     embed = discord.Embed(
             title="Добро пожаловать, пилот!",
             colour=discord.Colour.random(),
@@ -213,7 +213,7 @@ async def on_member_join(member):
                     value="test",
                     inline=False
         )
-        channel_welcome = bot.get_channel(757377279474139156)   
+        channel_welcome = bot.get_channel(757377279474139156)
         await channel_welcome.send(embed=embed)
     elif member.guild.id == russian_guild_id:
         await channel_welcome.send(embed=embed)
@@ -228,13 +228,13 @@ async def on_member_join(member):
 async def on_message(message):
     if message.author.bot: #check that author is not the bot itself
         return
-    
+
     if '://xwing-legacy.com/?f' in message.content:
         yasb_channel = message.channel
 
         # convert YASB link to XWS
         yasb_link = message.content
-        yasb_convert = yasb_link.replace('://xwing-legacy.com/', '://squad2xws.herokuapp.com/yasb/xws') 
+        yasb_convert = yasb_link.replace('://xwing-legacy.com/', '://squad2xws.herokuapp.com/yasb/xws')
         yasb_xws = requests.get(yasb_convert)
 
         #############
@@ -274,7 +274,7 @@ async def on_message(message):
         # _data = {}
         # loop = asyncio.get_event_loop()
         # # get JSON manifest from ttt-xwing-overlay repo
-    
+
     for key, value in yasb_dict.items(): # add embed fields with faction and list name
         if key in ["faction"]:
             embed.add_field(name=key,
@@ -293,8 +293,8 @@ async def on_message(message):
     await yasb_channel.send(embed=embed)
     await message.delete()
 
-    
-# http://xwing-legacy.com/ -> http://squad2xws.herokuapp.com/yasb/xws 
+
+# http://xwing-legacy.com/ -> http://squad2xws.herokuapp.com/yasb/xws
 # http://xwing-legacy.com/?f=Separatist%20Alliance&d=v8ZsZ200Z305X115WW207W229Y356X456W248Y542XW470WW367WY542XW470WW367W&sn=Royal%20escort&obs=
 
 #########################                 #########################
@@ -579,7 +579,7 @@ async def game(
         )
         await ctx.respond(embed=embed)
         return
-    
+
     if ctx.author.id not in [winner.id, looser.id]:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
@@ -589,7 +589,7 @@ async def game(
         )
         await ctx.respond(embed=embed)
         return
-    
+
     if role_check not in winner.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
@@ -601,7 +601,7 @@ async def game(
         )
         await ctx.respond(embed=embed)
         return
-    
+
     if role_check not in looser.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
@@ -726,7 +726,7 @@ async def tournament_game(
         )
         await ctx.respond(embed=embed)
         return
-    
+
     if role_check not in winner.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
@@ -738,7 +738,7 @@ async def tournament_game(
         )
         await ctx.respond(embed=embed)
         return
-    
+
     if role_check not in looser.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
