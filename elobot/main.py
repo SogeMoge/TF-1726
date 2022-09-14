@@ -65,7 +65,8 @@ channel_location_id= int(os.environ.get("CHANNEL_LOCATION_ID"))
 ##### YASB PARSING VARS #####
 GITHUB_USER = 'Gan0n29'
 GITHUB_BRANCH = 'xwing-legacy'
-BASE_URL = f"https://raw.githubusercontent.com/{GITHUB_USER}/ttt-xwing-overlay/{GITHUB_BRANCH}/src/assets/plugins/xwing-data2/"
+BASE_URL = f"https://raw.githubusercontent.com/{GITHUB_USER}" \
+            "/ttt-xwing-overlay/{GITHUB_BRANCH}/src/assets/plugins/xwing-data2/"
 MANIFEST = 'data/manifest.json'
 check_frequency = 900  # 15 minutes
 ##### YASB PARSING WARS #####
@@ -164,7 +165,8 @@ class UpdateView(discord.ui.View):
             )
         min_games = sql_select.minimal_games_property(conn)
         await interaction.response.edit_message(
-            content=f"Top resuts, played at least {min_games} game(s)\nUpdated from {date.today()}",
+            content=f"Top resuts, played at least {min_games} "\
+                    "game(s)\nUpdated from {date.today()}",
             embed=embed,
             view=UpdateView(),
         )
@@ -202,7 +204,13 @@ async def on_member_join(member):
             description=f"Поприветствуем {member.mention}"
     )
     embed.add_field(name="C чего начать:",
-                    value=f"""Пробегись по трём каналам в разделе **SYSTEM**:\n- {channel_navigation.mention} Узнаешь как здесь ориентироваться\n- {channel_roles.mention} Выберешь подходящие для себя роли\n- {channel_locaton.mention} Расскажи где ты живёшь, *чтобы получить роль своего города*\n""",
+                    value=f"""Пробегись по трём каналам в разделе \
+                              **SYSTEM**:\n- {channel_navigation.mention} \
+                              Узнаешь как здесь ориентироваться\n- \
+                              {channel_roles.mention} Выберешь подходящие \
+                              для себя роли\n- {channel_locaton.mention} \
+                              Расскажи где ты живёшь, \
+                              *чтобы получить роль своего города*\n""",
                     inline=False
     )
     if member.guild.id == test_guild_id:
@@ -230,7 +238,10 @@ async def on_message(message):
 
         # convert YASB link to XWS
         yasb_link = message.content
-        yasb_convert = yasb_link.replace('://xwing-legacy.com/', '://squad2xws.herokuapp.com/yasb/xws')
+        yasb_convert = yasb_link.replace(
+            '://xwing-legacy.com/',
+            '://squad2xws.herokuapp.com/yasb/xws'
+        )
         yasb_xws = requests.get(yasb_convert)
 
         #############
@@ -283,7 +294,11 @@ async def on_message(message):
     for pilot in range(pilots_total): # add embed fields for each pilot in a list
         embed.add_field(name=yasb_dict["pilots"][pilot]["id"],
                         # value=list(yasb_dict["pilots"][pilot]["upgrades"].values()),
-                        value=re.sub(r"[\[\]\']",'\u200b',str(list(yasb_dict["pilots"][pilot]["upgrades"].values()))),
+                        value=re.sub(
+                            r"[\[\]\']",
+                            '\u200b',
+                            str(list(yasb_dict["pilots"][pilot]["upgrades"].values()))
+                        ),
                         inline=False
             )
     await yasb_channel.send(embed=embed)
@@ -357,7 +372,12 @@ async def scenario_roll(
     rounds_number: Option(int, "№ of rounds", required=True),
 ):
     """Get random scenario list for provided number of rounds"""
-    scenario_list = ['Assault at the Satellite Array', 'Chance Engagement', 'Salvage Mission', 'Scramble the Transmissions']
+    scenario_list = [
+        'Assault at the Satellite Array',
+        'Chance Engagement',
+        'Salvage Mission',
+        'Scramble the Transmissions'
+    ]
     if rounds_number in range(1, 4):
         # pick # of random scenario from the list
         play_list = random.sample(scenario_list, k=rounds_number)
@@ -423,7 +443,9 @@ async def register(ctx, member: discord.Member):
         )
     else:
         # Inserts row with user data into db as well as default game stat values
-        insert_member_sql_querry = f"""INSERT INTO members (member_id, member_name) VALUES ({member.id}, '{member.name}');"""
+        insert_member_sql_querry = f"""INSERT INTO \
+                                       members(member_id, member_name) \
+                                       VALUES ({member.id}, '{member.name}');"""
         sql_insert.statement(conn, insert_member_sql_querry)
         conn.commit()
         # add league role
@@ -489,7 +511,8 @@ async def check(ctx, member: discord.Member):
     embed = discord.Embed(colour=discord.Colour(0x6790A7))
     embed.add_field(
         name="Games played",
-        value="{} and {} have played {} games in total, not including tournament games.".format(
+        value="{} and {} have played {} games in total, " \
+            "not including tournament games.".format(
             ctx.author.display_name, member.display_name, gcount
         ),
         inline=True,
@@ -530,7 +553,8 @@ async def top(ctx):
     n = 0
     cur = conn.cursor()
     for row in cur.execute(
-        f"SELECT member_name, rating FROM members WHERE member_id IN ({member_string}) ORDER BY rating DESC;"
+        f"SELECT member_name, rating FROM members " \
+        "WHERE member_id IN ({member_string}) ORDER BY rating DESC;"
     ):
         n = n + 1
         embed.add_field(
@@ -687,7 +711,8 @@ async def game(
     )
 
     await ctx.respond(
-        f"(Game {game_id}): {winner.display_name} won against {looser.display_name} with {winner_points} - {looser_points} score!"
+        f"(Game {game_id}): {winner.display_name} won against " \
+        "{looser.display_name} with {winner_points} - {looser_points} score!"
     )
     emb_msg = await ctx.send(embeds=[embed_win, embed_loss])
     for reaction in accept_reactions:
@@ -813,7 +838,9 @@ async def tournament_game(
     )
 
     msg = await ctx.respond(
-        f"(Game {game_id}): {winner.display_name} won in a tournament against {looser.display_name} with {winner_points} - {looser_points} score!"
+        f"(Game {game_id}): {winner.display_name} won " \
+        "in a tournament against {looser.display_name} " \
+        "with {winner_points} - {looser_points} score!"
     )
     await ctx.send(embeds=[embed_win, embed_loss])
 
