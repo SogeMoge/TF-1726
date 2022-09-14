@@ -161,7 +161,7 @@ class UpdateView(discord.ui.View):
             n = n + 1
             embed.add_field(
                 name="\u200b",
-                value=f"{} - {} | R:{} W:{} L:{}".format(
+                value="{} - {} | R:{} W:{} L:{}".format(
                     n, row[0], row[1], row[2], row[3]
                 ),
                 inline=False,
@@ -506,7 +506,7 @@ async def check(ctx, member: discord.Member):
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
-            value=f"{} is not a league member!".format(
+            value="{} is not a league member!".format(
                 member.display_name
             ),
             inline=True,
@@ -518,7 +518,7 @@ async def check(ctx, member: discord.Member):
     embed = discord.Embed(colour=discord.Colour(0x6790A7))
     embed.add_field(
         name="Games played",
-        value=f"{} and {} have played {} games in total, " \
+        value="{} and {} have played {} games in total, " \
             "not including tournament games.".format(
             ctx.author.display_name, member.display_name, gcount
         ),
@@ -566,7 +566,7 @@ async def top(ctx):
         n = n + 1
         embed.add_field(
             name="\u200b",
-            value=f"{} - {}".format(n, row[0]),
+            value="{} - {}".format(n, row[0]),
             inline=False,
         )
     await ctx.respond(
@@ -617,7 +617,7 @@ async def game(
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
-            value=f"{} is not a league member!".format(
+            value="{} is not a league member!".format(
                 winner.display_name
             ),
             inline=True,
@@ -629,7 +629,7 @@ async def game(
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
-            value=f"{} is not a league member!".format(
+            value="{} is not a league member!".format(
                 looser.display_name
             ),
             inline=True,
@@ -641,7 +641,7 @@ async def game(
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
-            value=f"{} and {} have played {} games already!".format(
+            value="{} and {} have played {} games already!".format(
                 winner.display_name,
                 looser.display_name,
                 mutual_games_property,
@@ -756,7 +756,7 @@ async def tournament_game(
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
-            value=f"{} is not a league member!".format(
+            value="{} is not a league member!".format(
                 winner.display_name
             ),
             inline=True,
@@ -768,7 +768,7 @@ async def tournament_game(
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
-            value=f"{} is not a league member!".format(
+            value="{} is not a league member!".format(
                 looser.display_name
             ),
             inline=True,
