@@ -137,13 +137,13 @@ class UpdateView(discord.ui.View):
                 from members m
                 left join
                 (select m.member_id, count(g.winner_id) cnt_win
-                from  members m 
+                from  members m
                 left JOIN games g ON m.member_id=g.winner_id
                 group by m.member_id
                 ) a on m.member_id = a.member_id
                 left join
                 (select m.member_id, count(g.looser_id) cnt_loose
-                from  members m 
+                from  members m
                 left JOIN games g ON m.member_id=g.looser_id
                 group by m.member_id
                 ) b on m.member_id = b.member_id
@@ -193,7 +193,7 @@ async def on_member_join(member):
     channel_roles = bot.get_channel(channel_roles_id)
     channel_locaton = bot.get_channel(channel_location_id)
 
-    
+
     embed = discord.Embed(
             title="Добро пожаловать, пилот!",
             colour=discord.Colour.random(),
@@ -208,7 +208,7 @@ async def on_member_join(member):
                     value="test",
                     inline=False
         )
-        channel_welcome = bot.get_channel(757377279474139156)   
+        channel_welcome = bot.get_channel(757377279474139156)
         await channel_welcome.send(embed=embed)
     elif member.guild.id == russian_guild_id:
         await channel_welcome.send(embed=embed)
@@ -228,7 +228,7 @@ async def on_message(message):
 
         # convert YASB link to XWS
         yasb_link = message.content
-        yasb_convert = yasb_link.replace('://xwing-legacy.com/', '://squad2xws.herokuapp.com/yasb/xws') 
+        yasb_convert = yasb_link.replace('://xwing-legacy.com/', '://squad2xws.herokuapp.com/yasb/xws')
         yasb_xws = requests.get(yasb_convert)
 
         #############
@@ -268,7 +268,7 @@ async def on_message(message):
         # _data = {}
         # loop = asyncio.get_event_loop()
         # # get JSON manifest from ttt-xwing-overlay repo
-    
+
     for key, value in yasb_dict.items(): # add embed fields with faction and list name
         if key in ["faction"]:
             embed.add_field(name=key,
@@ -292,8 +292,8 @@ async def on_message(message):
     # await channel.send(yasb_dict["pilots"][2])
     # await channel.send(yasb_dict["pilots"][3])
 
-    
-# http://xwing-legacy.com/ -> http://squad2xws.herokuapp.com/yasb/xws 
+
+# http://xwing-legacy.com/ -> http://squad2xws.herokuapp.com/yasb/xws
 # http://xwing-legacy.com/?f=Separatist%20Alliance&d=v8ZsZ200Z305X115WW207W229Y356X456W248Y542XW470WW367WY542XW470WW367W&sn=Royal%20escort&obs=
 
 #########################                 #########################
@@ -944,11 +944,11 @@ async def league_create_tables(ctx):
     """Create tables first time"""
     if conn is not None:
 
-        sql_db.create_table(conn, db_tables.sql_create_members_table)
+        sql_db.create_table(conn, db_tables.SQL_CREATE_MEMBERS_TABLE)
 
-        sql_db.create_table(conn, db_tables.sql_create_properties_table)
+        sql_db.create_table(conn, db_tables.SQL_CREATE_PROPERTIES_TABLE)
 
-        sql_db.create_table(conn, db_tables.sql_create_games_table)
+        sql_db.create_table(conn, db_tables.SQL_CREATE_GAMES_TABLE)
 
         sql_insert.set_properties(conn, db_properties.k_regular_properties)
 
@@ -973,17 +973,17 @@ async def league_recreate_tables(ctx):
     """Drop and Create tables for fresh start"""
     if conn is not None:
 
-        sql_db.drop_table(conn, db_tables.sql_drop_members_table)
+        sql_db.drop_table(conn, db_tables.SQL_DROP_MEMBERS_TABLE)
 
-        sql_db.drop_table(conn, db_tables.sql_drop_properties_table)
+        sql_db.drop_table(conn, db_tables.SQL_DROP_PROPERTIES_TABLE)
 
-        sql_db.drop_table(conn, db_tables.sql_drop_games_table)
+        sql_db.drop_table(conn, db_tables.SQL_DROP_GAMES_TABLE)
 
-        sql_db.create_table(conn, db_tables.sql_create_members_table)
+        sql_db.create_table(conn, db_tables.SQL_CREATE_MEMBERS_TABLE)
 
-        sql_db.create_table(conn, db_tables.sql_create_properties_table)
+        sql_db.create_table(conn, db_tables.SQL_CREATE_PROPERTIES_TABLE)
 
-        sql_db.create_table(conn, db_tables.sql_create_games_table)
+        sql_db.create_table(conn, db_tables.SQL_CREATE_GAMES_TABLE)
 
         sql_insert.set_properties(conn, db_properties.k_regular_properties)
 
