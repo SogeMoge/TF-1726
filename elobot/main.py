@@ -1,4 +1,4 @@
-"""main bot file witt slash commands and events""" 
+"""main bot file witt slash commands and events"""
 import os
 # import subprocess
 from datetime import date
@@ -28,7 +28,6 @@ import sql_update
 import sql_db
 import db_properties
 import db_tables
-
 
 import requests
 from dotenv import load_dotenv
@@ -83,12 +82,9 @@ def create_connection(db_file):
     :param db_file: database file
     :return: Connection object or None
     """
-    conn = None
-    try:
-        conn = sqlite3.connect(db_file)
-        return conn
-    except Error as e:
-        print(e)
+    # conn = None
+    conn = sqlite3.connect(db_file)
+    return conn
 
     return conn
 
@@ -119,8 +115,9 @@ def rating(win, K, R, E):
     return Rn
 
 class UpdateView(discord.ui.View):
+    """embed league rating table with update button"""
     def __init__(self):
-        """embed league rating table with update button"""
+        """dunno"""
         super().__init__(timeout=None)
 
     @discord.ui.button(
@@ -239,7 +236,7 @@ async def on_message(message):
     """parse legacy-yasb link to post embed list"""
     if message.author.bot: #check that author is not the bot itself
         return
-    
+
     if '://xwing-legacy.com/?f' in message.content:
         yasb_channel = message.channel
 
@@ -249,7 +246,7 @@ async def on_message(message):
             '://xwing-legacy.com/',
             '://squad2xws.herokuapp.com/yasb/xws'
         )
-        yasb_xws = requests.get(yasb_convert)
+        yasb_xws = requests.get(yasb_convert, timeout=10)
 
         #############
         # don't know if it works at all???
@@ -602,7 +599,7 @@ async def game(
         )
         await ctx.respond(embed=embed)
         return
-    
+
     if ctx.author.id not in [winner.id, looser.id]:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
@@ -612,7 +609,7 @@ async def game(
         )
         await ctx.respond(embed=embed)
         return
-    
+
     if role_check not in winner.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
@@ -624,7 +621,7 @@ async def game(
         )
         await ctx.respond(embed=embed)
         return
-    
+
     if role_check not in looser.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
@@ -636,7 +633,7 @@ async def game(
         )
         await ctx.respond(embed=embed)
         return
-    
+
     if mutual_games_count >= mutual_games_property:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
@@ -751,7 +748,7 @@ async def tournament_game(
         )
         await ctx.respond(embed=embed)
         return
-    
+
     if role_check not in winner.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
@@ -763,7 +760,7 @@ async def tournament_game(
         )
         await ctx.respond(embed=embed)
         return
-    
+
     if role_check not in looser.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
@@ -866,6 +863,7 @@ async def fun_win(
     ctx,
     winner: discord.Member,
 ):
+    """score points for winning fun event"""
     points = sql_select.fun_event_win_points(conn)
     # Ra = select_rating_sql(conn, winner.id)
     Ra = sql_select.rating(conn, winner.id)
