@@ -1,15 +1,13 @@
 import os
-import subprocess
-from dotenv import load_dotenv
+# import subprocess
 from datetime import date
 import random
 
 # modules for YASB link parsing
 import re
-import requests
 import json
 from html import unescape
-import asyncio
+# import asyncio
 
 import sqlite3
 from sqlite3 import Error
@@ -19,7 +17,7 @@ from discord.ext import commands
 from discord.utils import get
 from discord.commands import Option
 from discord.commands import permissions
-from discord.ui import Button, View, Select
+from discord.ui import Button, View
 
 # custom bot modules
 import sql_select
@@ -29,8 +27,12 @@ import sql_db
 import db_properties
 import db_tables
 
-##### Configure logging #####
+
 import logging
+import requests
+from dotenv import load_dotenv
+
+##### Configure logging #####
 logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
 handler = logging.FileHandler(filename='elobot.log', encoding='utf-8', mode='w')
@@ -286,12 +288,6 @@ async def on_message(message):
             )
     await yasb_channel.send(embed=embed)
     await message.delete()
-    # await yasb_channel.send(yasb_dict["pilots"][0]["id"])
-    # await yasb_channel.send(len(yasb_dict["pilots"]))
-    # await channel.send(yasb_dict["pilots"][1])
-    # await channel.send(yasb_dict["pilots"][2])
-    # await channel.send(yasb_dict["pilots"][3])
-
 
 # http://xwing-legacy.com/ -> http://squad2xws.herokuapp.com/yasb/xws
 # http://xwing-legacy.com/?f=Separatist%20Alliance&d=v8ZsZ200Z305X115WW207W229Y356X456W248Y542XW470WW367WY542XW470WW367W&sn=Royal%20escort&obs=
@@ -300,24 +296,14 @@ async def on_message(message):
 #########################  INFO COMMANDS  #########################
 #########################                 #########################
 
-# @bot.slash_command(guild_ids=[test_guild_id])  # create a slash command for the supplied guilds
-# async def hello(ctx):
-#     """Say hello to the bot"""  # the command description can be supplied as the docstring
-#     await ctx.respond(f"Hello, {ctx.author.display_name}!")
 
 
 @bot.slash_command(
     guild_ids=[test_guild_id, russian_guild_id]
 )  # create a slash command for the supplied guilds
 async def links(ctx):
-    """Useful X-Wing resources"""  # the command description can be supplied as the docstring
-    # embed = discord.Embed(title="X-Wing resources", colour=discord.Colour(0xFFD700))
-    # embed.add_field(name="Actual Rules documents", value="https://www.atomicmassgames.com/xwing-documents", inline=True)
-    # embed.add_field(name="Official AMG Rules Forum", value="http://bit.ly/xwingrulesforum", inline=False)
-    # embed.add_field(name="Buying guide", value="https://bit.ly/2WzBq0c", inline=False)
-    # embed.add_field(name="Black Market A68", value="https://bit.ly/3DLZuhe")
-    # # embed.set_footer(text=ctx.author.name, icon_url = ctx.author.avatar_url)
-    # await ctx.respond(embed=embed)
+    """Useful X-Wing resources"""
+
     button1 = Button(
         label="X-Wing 2.6 Rules",
         url="https://www.atomicmassgames.com/xwing-documents",
@@ -342,13 +328,8 @@ async def links(ctx):
     guild_ids=[test_guild_id, russian_guild_id]
 )  # create a slash command for the supplied guilds
 async def builders(ctx):
-    """Squad Builders for X-Wing from comunity"""  # the command description can be supplied as the docstring
-    # embed = discord.Embed(title="X-Wing builders", colour=discord.Colour(0xFFD700))
-    # embed.add_field(name="YASB 2.0 (Web)", value="https://raithos.github.io", inline=True)
-    # embed.add_field(name="Launch Bay Next (Web)", value="https://launchbaynext.app", inline=False)
-    # embed.add_field(name="Launch Bay Next (Android)", value="https://bit.ly/3bP3GjG", inline=False)
-    # embed.add_field(name="Launch Bay Next (iOS)", value="https://apple.co/3CToHVX")
-    # await ctx.respond(embed=embed)
+    """Squad Builders for X-Wing from comunity"""
+
     button1 = Button(
         label="YASB 2.6 (Web)", url="https://yasb.app/"
     )
@@ -375,7 +356,7 @@ async def scenario_roll(
     ctx,
     rounds_number: Option(int, "№ of rounds", required=True),
 ):
-    """Get random scenario list for provided number of rounds"""  # the command description can be supplied as the docstring
+    """Get random scenario list for provided number of rounds"""
     scenario_list = ['Assault at the Satellite Array', 'Chance Engagement', 'Salvage Mission', 'Scramble the Transmissions']
     if rounds_number in range(1, 4):
         # pick # of random scenario from the list
@@ -449,18 +430,13 @@ async def register(ctx, member: discord.Member):
         await member.add_roles(role)
         # pretty outpun in chat
         embed = discord.Embed(
-            title=f"Registration successful\nWelcome to the league!",
+            title="Registration successful\nWelcome to the league!",
             colour=discord.Colour(0x6790A7),
         )
         embed.set_footer(
             text=member.display_name, icon_url=member.display_avatar
         )
         await ctx.respond(embed=embed)
-
-
-#    except: # simple error handler if bot tries to insert duplicated value
-#        await ctx.respond(f"It seems that registration for {member.display_name} has failed")
-
 
 @bot.slash_command(
     guild_ids=[test_guild_id, russian_guild_id],
@@ -547,7 +523,7 @@ async def top(ctx):
 
     if not member_list:  # do this!
         await ctx.respond(
-            f"Nobody has reached minimum number of games, play more!"
+            "Nobody has reached minimum number of games, play more!"
         )
         return
 
@@ -567,37 +543,6 @@ async def top(ctx):
         embed=embed,
         view=UpdateView(),
     )
-
-    # button = Button(
-    #     label="Update",
-    #     style=discord.ButtonStyle.primary,
-    #     emoji=update_reaction,
-    # )
-
-    # async def button_callback(interaction):
-    #     # await interaction.response.edit_massage(content="Updated results from {date}", embed=embed)
-    #     embed = discord.Embed(
-    #         title="League leaderboard", colour=discord.Colour(0xFFD700)
-    #     )
-    #     n = 0
-    #     cur = conn.cursor()
-    #     for row in cur.execute(
-    #         f'SELECT member_name||" - "||rating FROM members ORDER BY rating DESC;'
-    #     ):
-    #         n = n + 1
-    #         embed.add_field(
-    #             name="\u200b",
-    #             value="{} - {}".format(n, row[0]),
-    #             inline=False,
-    #         )
-    #     await interaction.response.edit_message(
-    #         content=f"Updated from {date}", embed=embed, view=view
-    #     )
-
-    # button.callback = button_callback
-
-    # view = View(button, timeout=None)
-    # await ctx.send(f"Results from {date}", embed=embed, view=view)
 
 
 @bot.slash_command(
@@ -964,7 +909,7 @@ async def league_create_tables(ctx):
     else:
         print("Error! cannot create the database connection.")
 
-    await ctx.respond(f"Tables created!")
+    await ctx.respond("Tables created!")
 
 
 @bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
@@ -1000,7 +945,7 @@ async def league_recreate_tables(ctx):
     else:
         print("Error! cannot create the database connection.")
 
-    await ctx.respond(f"Tables recreated!")
+    await ctx.respond("Tables recreated!")
 
 
 # SELECT *
