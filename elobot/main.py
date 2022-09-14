@@ -1,3 +1,4 @@
+"""main bot file witt slash commands and events""" 
 import os
 # import subprocess
 from datetime import date
@@ -11,6 +12,7 @@ from html import unescape
 
 import sqlite3
 from sqlite3 import Error
+import logging
 
 import discord
 from discord.ext import commands
@@ -28,7 +30,6 @@ import db_properties
 import db_tables
 
 
-import logging
 import requests
 from dotenv import load_dotenv
 
@@ -68,10 +69,10 @@ GITHUB_BRANCH = 'xwing-legacy'
 BASE_URL = f"https://raw.githubusercontent.com/{GITHUB_USER}" \
             "/ttt-xwing-overlay/{GITHUB_BRANCH}/src/assets/plugins/xwing-data2/"
 MANIFEST = 'data/manifest.json'
-check_frequency = 900  # 15 minutes
+CHECK_FREQUENCY = 900  # 15 minutes
 ##### YASB PARSING WARS #####
 
-update_reaction = "\U0001f504"  # circle arrows
+UPDATE_REACTION = "\U0001f504"  # circle arrows
 accept_reactions = ["\U00002705", "\U0000274e"]  # check and cross marks
 date = date.today()
 
@@ -119,15 +120,17 @@ def rating(win, K, R, E):
 
 class UpdateView(discord.ui.View):
     def __init__(self):
+        """embed league rating table with update button"""
         super().__init__(timeout=None)
 
     @discord.ui.button(
         custom_id="update1",
         label="Update",
         style=discord.ButtonStyle.primary,
-        emoji=update_reaction,
+        emoji=UPDATE_REACTION,
     )
     async def button_callback(self, button, interaction):
+        """update league rating table on button click"""
         embed = discord.Embed(
             title="League leaderboard", colour=discord.Colour(0xFFD700)
         )
@@ -158,7 +161,7 @@ class UpdateView(discord.ui.View):
             n = n + 1
             embed.add_field(
                 name="\u200b",
-                value="{} - {} | R:{} W:{} L:{}".format(
+                value=f"{} - {} | R:{} W:{} L:{}".format(
                     n, row[0], row[1], row[2], row[3]
                 ),
                 inline=False,
@@ -177,6 +180,7 @@ class UpdateView(discord.ui.View):
 
 @bot.event
 async def on_ready():
+    """on_ready console message"""
     bot.add_view(UpdateView())
     print(f"{bot.user} is ready!")
 
@@ -192,6 +196,7 @@ async def on_ready():
 
 @bot.event
 async def on_member_join(member):
+    """post welcome message on member join"""
     channel_welcome = bot.get_channel(channel_welcome_id)
     channel_navigation = bot.get_channel(channel_navigation_id)
     channel_roles = bot.get_channel(channel_roles_id)
@@ -231,9 +236,11 @@ async def on_member_join(member):
 
 @bot.event
 async def on_message(message):
+    """parse legacy-yasb link to post embed list"""
     if message.author.bot: #check that author is not the bot itself
         return
-    elif '://xwing-legacy.com/?f' in message.content:
+    
+    if '://xwing-legacy.com/?f' in message.content:
         yasb_channel = message.channel
 
         # convert YASB link to XWS
@@ -499,7 +506,7 @@ async def check(ctx, member: discord.Member):
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
-            value="{} is not a league member!".format(
+            value=f"{} is not a league member!".format(
                 member.display_name
             ),
             inline=True,
@@ -511,7 +518,7 @@ async def check(ctx, member: discord.Member):
     embed = discord.Embed(colour=discord.Colour(0x6790A7))
     embed.add_field(
         name="Games played",
-        value="{} and {} have played {} games in total, " \
+        value=f"{} and {} have played {} games in total, " \
             "not including tournament games.".format(
             ctx.author.display_name, member.display_name, gcount
         ),
@@ -559,7 +566,7 @@ async def top(ctx):
         n = n + 1
         embed.add_field(
             name="\u200b",
-            value="{} - {}".format(n, row[0]),
+            value=f"{} - {}".format(n, row[0]),
             inline=False,
         )
     await ctx.respond(
@@ -595,7 +602,8 @@ async def game(
         )
         await ctx.respond(embed=embed)
         return
-    elif ctx.author.id not in [winner.id, looser.id]:
+    
+    if ctx.author.id not in [winner.id, looser.id]:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
@@ -604,33 +612,36 @@ async def game(
         )
         await ctx.respond(embed=embed)
         return
-    elif role_check not in winner.roles:
+    
+    if role_check not in winner.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
-            value="{} is not a league member!".format(
+            value=f"{} is not a league member!".format(
                 winner.display_name
             ),
             inline=True,
         )
         await ctx.respond(embed=embed)
         return
-    elif role_check not in looser.roles:
+    
+    if role_check not in looser.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
-            value="{} is not a league member!".format(
+            value=f"{} is not a league member!".format(
                 looser.display_name
             ),
             inline=True,
         )
         await ctx.respond(embed=embed)
         return
-    elif mutual_games_count >= mutual_games_property:
+    
+    if mutual_games_count >= mutual_games_property:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
-            value="{} and {} have played {} games already!".format(
+            value=f"{} and {} have played {} games already!".format(
                 winner.display_name,
                 looser.display_name,
                 mutual_games_property,
@@ -740,22 +751,24 @@ async def tournament_game(
         )
         await ctx.respond(embed=embed)
         return
-    elif role_check not in winner.roles:
+    
+    if role_check not in winner.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
-            value="{} is not a league member!".format(
+            value=f"{} is not a league member!".format(
                 winner.display_name
             ),
             inline=True,
         )
         await ctx.respond(embed=embed)
         return
-    elif role_check not in looser.roles:
+    
+    if role_check not in looser.roles:
         embed = discord.Embed(colour=discord.Colour(0xFF0000))
         embed.add_field(
             name="ERROR",
-            value="{} is not a league member!".format(
+            value=f"{} is not a league member!".format(
                 looser.display_name
             ),
             inline=True,
@@ -878,6 +891,7 @@ async def fun_game(
     ctx,
     participant: discord.Member,
 ):
+    """score points for participation in event"""
     points = sql_select.fun_event_participation_points(conn)
     # Ra = select_rating_sql(conn, participant.id)
     Ra = sql_select.rating(conn, participant.id)
