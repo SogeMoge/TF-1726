@@ -30,4 +30,4 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: sogemoge/tf-1726:${GITHUB_REF/refs\/tags\//}, sogemoge/tf-1726:latest
+          tags: sogemoge/tf-1726:$GITHUB_REF_NAME, sogemoge/tf-1726:latest
