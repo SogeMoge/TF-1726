@@ -17,6 +17,9 @@ jobs:
         name: Build and push Docker images
         uses: docker/build-push-action@v3.1.1
       -
+        name: Get branch name
+        run: echo "BRANCH=${GITHUB_REF##*/}" >> $GITHUB_ENV
+      -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       -
@@ -30,4 +33,4 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: sogemoge/tf-1726:$GITHUB_REF_NAME, sogemoge/tf-1726:latest
+          tags: sogemoge/tf-1726:${{ env.BRANCH }}, sogemoge/tf-1726:latest
