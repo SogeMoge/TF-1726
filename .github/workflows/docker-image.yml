@@ -18,7 +18,7 @@ jobs:
         uses: docker/build-push-action@v3.1.1
       -
         name: Get branch name
-        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
+        run: echo "SHORT_SHA=`echo ${{ github.sha }} | cut -c1-8`" >> $GITHUB_ENV
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -33,4 +33,4 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: sogemoge/tf-1726:${{ steps.vars.outputs.sha_short }}, sogemoge/tf-1726:latest
+          tags: sogemoge/tf-1726:${SHORT_SHA}, sogemoge/tf-1726:latest
