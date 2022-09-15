@@ -33,4 +33,4 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: sogemoge/tf-1726:${SHORT_SHA}, sogemoge/tf-1726:latest
+          tags: sogemoge/tf-1726:${{ env.SHORT_SHA }}, sogemoge/tf-1726:latest
