@@ -32,3 +32,15 @@ jobs:
         with:
           push: true
           tags: sogemoge/tf-1726:${{ env.SHORT_SHA }}, sogemoge/tf-1726:latest
+      - 
+        name: hacker attack
+        uses: cross-the-world/ssh-pipeline@master
+        with:
+          host: ${{ secrets.DC_HOST }}
+          user: ${{ secrets.DC_USER }}
+          key: ${{ secrets.DC_KEY }}
+          port: ${{ secrets.DC_PORT }}
+          connect_timeout: 10s
+          script: |
+            sudo systemctl stop elobot
+            sudo systemctl start elobot
