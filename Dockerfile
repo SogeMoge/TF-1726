@@ -7,3 +7,4 @@ WORKDIR /opt/TF-1726
 COPY elobot/* ./
 
 ENTRYPOINT ["python3", "main.py"]
+
