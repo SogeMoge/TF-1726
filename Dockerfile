@@ -1,11 +1,9 @@
 FROM python:3.8.14-slim
 
-WORKDIR /home
+COPY requirements.txt .
+RUN /usr/local/bin/python -m pip install --upgrade pip && pip install -r requirements.txt
 
-RUN /usr/local/bin/python -m pip install --upgrade pip && pip install py-cord==2.0.0b1 python-dotenv requests
+WORKDIR /opt/TF-1726
+COPY elobot/* ./
 
-RUN apt-get update && apt-get upgrade -y && apt-get install -y git && git clone https://github.com/SogeMoge/TF-1726.git
-
-WORKDIR /home/TF-1726
-
-CMD ["python3", "elobot/main.py"]
+ENTRYPOINT ["python3", "main.py"]
