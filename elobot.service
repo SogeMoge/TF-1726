@@ -1,0 +1,14 @@
+[Unit]
+Description=Podman-composure-TF-1726.service
+Documentation=man:podman-generate-systemd(1)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=sogemoge
+WorkingDirectory=/home/sogemoge/projects/TF-1726
+ExecStart=/home/sogemoge/.local/bin/podman-compose pull ; /home/sogemoge/.local/bin/podman-compose up -d
+Type=oneshot
+
+[Install]
+WantedBy=multi-user.target default.target
