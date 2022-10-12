@@ -250,7 +250,7 @@ async def on_message(message):
 
         #############
         # don't know if it works at all???
-        yasb_xws = unescape(yasb_xws) # delete all characters which prevents proper parsing
+        #yasb_xws = unescape(yasb_xws) # delete all characters which prevents proper parsing
 
         yasb_json = yasb_xws.json() # raw XWS in JSON
         yasb_json = json.dumps(yasb_json) # convert single quotes to double quotes
