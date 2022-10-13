@@ -273,8 +273,8 @@ async def on_message(message):
                     colour=discord.Colour.random(),
                     url=message.content,
                     description="YASB Legacy 2.0 list"
-            else:
-               embed = discord.Embed(
+            else :
+                embed = discord.Embed(
                     title="Infamous squadron",
                     colour=discord.Colour.random(),
                     url=message.content,
