@@ -1,4 +1,9 @@
 """main bot file witt slash commands and events"""
+# https://stackoverflow.com/a/65908383
+# fixes libgcc_s.so.1 must be installed for pthread_cancel to work
+import ctypes
+libgcc_s = ctypes.CDLL('libgcc_s.so.1')
+
 import os
 # import subprocess
 from datetime import date
