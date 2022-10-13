@@ -1,4 +1,9 @@
 """main bot file witt slash commands and events"""
+# https://stackoverflow.com/a/65908383
+# fixes libgcc_s.so.1 must be installed for pthread_cancel to work
+import ctypes
+libgcc_s = ctypes.CDLL('libgcc_s.so.1')
+
 import os
 # import subprocess
 from datetime import date
@@ -242,19 +247,24 @@ async def on_message(message):
 
         # convert YASB link to XWS
         yasb_link = message.content
+        #print(f"1) yasb_link = {yasb_link}")
         yasb_convert = yasb_link.replace(
             '://xwing-legacy.com/',
             '://squad2xws.herokuapp.com/yasb/xws'
         )
+        #print(f"2) yasb_convert = {yasb_convert}")
         yasb_xws = requests.get(yasb_convert, timeout=10)
-
+        #print(f"3) yasb_xws = {yasb_xws}")
         #############
         # don't know if it works at all???
-        yasb_xws = unescape(yasb_xws) # delete all characters which prevents proper parsing
+        #yasb_xws = unescape(yasb_xws) # delete all characters which prevents proper parsing
 
         yasb_json = yasb_xws.json() # raw XWS in JSON
+        #print(f"4) yasb_json = {yasb_json}")
         yasb_json = json.dumps(yasb_json) # convert single quotes to double quotes
+        #print(f"5) yasb_json = {yasb_json}")
         yasb_dict = json.loads(yasb_json) # convert JSON to python object
+        #print(f"6) yasb_dict = {yasb_dict}")
         #############
         for key, value in yasb_dict.items(): # add embed title with list name as hyperlink
             if key in ["name"]:
@@ -264,6 +274,15 @@ async def on_message(message):
                     url=message.content,
                     description="YASB Legacy 2.0 list"
                 )
+        try: # use custom name for squads with default name from yasb
+            embed
+        except NameError:
+            embed = discord.Embed(
+                title="Infamous Squadron",
+                colour=discord.Colour.random(),
+                url=message.content,
+                description="YASB Legacy 2.0 list"
+            )
 
         embed.set_footer(
             text=message.author.display_name, icon_url=message.author.display_avatar
