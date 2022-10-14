@@ -1,4 +1,6 @@
 """main bot file witt slash commands and events"""
+# pylint: disable=wrong-import-position, consider-using-f-string
+
 # https://stackoverflow.com/a/65908383
 # fixes libgcc_s.so.1 must be installed for pthread_cancel to work
 import ctypes
