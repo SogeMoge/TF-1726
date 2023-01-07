@@ -4,9 +4,11 @@
 # https://stackoverflow.com/a/65908383
 # fixes libgcc_s.so.1 must be installed for pthread_cancel to work
 import ctypes
-libgcc_s = ctypes.CDLL('libgcc_s.so.1')
+
+libgcc_s = ctypes.CDLL("libgcc_s.so.1")
 
 import os
+
 # import subprocess
 from datetime import date
 import random
@@ -15,7 +17,7 @@ import random
 import re
 import json
 from html import unescape
-# import asyncio
+
 
 import sqlite3
 from sqlite3 import Error
@@ -40,10 +42,14 @@ import requests
 from dotenv import load_dotenv
 
 ##### Configure logging #####
-logger = logging.getLogger('discord')
+logger = logging.getLogger("discord")
 logger.setLevel(logging.INFO)
-handler = logging.FileHandler(filename='elobot.log', encoding='utf-8', mode='w')
-handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+handler = logging.FileHandler(
+    filename="elobot.log", encoding="utf-8", mode="w"
+)
+handler.setFormatter(
+    logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
+)
 logger.addHandler(handler)
 
 intents = discord.Intents().all()
@@ -63,18 +69,20 @@ db = os.environ.get("DATABASE")
 
 ##### Welcome channel vars #####
 channel_welcome_id = int(os.environ.get("CHANNEL_WELCOME_ID"))
-channel_navigation_id= int(os.environ.get("CHANNEL_NAVIGATION_ID"))
-channel_roles_id= int(os.environ.get("CHANNEL_ROLES_ID"))
-channel_location_id= int(os.environ.get("CHANNEL_LOCATION_ID"))
+channel_navigation_id = int(os.environ.get("CHANNEL_NAVIGATION_ID"))
+channel_roles_id = int(os.environ.get("CHANNEL_ROLES_ID"))
+channel_location_id = int(os.environ.get("CHANNEL_LOCATION_ID"))
 ##### Welcome channel vars #####
 
 
 ##### YASB PARSING VARS #####
-GITHUB_USER = 'Gan0n29'
-GITHUB_BRANCH = 'xwing-legacy'
-BASE_URL = f"https://raw.githubusercontent.com/{GITHUB_USER}" \
-            "/ttt-xwing-overlay/{GITHUB_BRANCH}/src/assets/plugins/xwing-data2/"
-MANIFEST = 'data/manifest.json'
+GITHUB_USER = "Gan0n29"
+GITHUB_BRANCH = "xwing-legacy"
+BASE_URL = (
+    f"https://raw.githubusercontent.com/{GITHUB_USER}"
+    "/ttt-xwing-overlay/{GITHUB_BRANCH}/src/assets/plugins/xwing-data2/"
+)
+MANIFEST = "data/manifest.json"
 CHECK_FREQUENCY = 900  # 15 minutes
 ##### YASB PARSING WARS #####
 
@@ -94,6 +102,7 @@ def create_connection(db_file):
     return conn
 
     return conn
+
 
 conn = create_connection(db)
 
@@ -121,8 +130,10 @@ def rating(win, K, R, E):
     Rn = round(R + K * (win - E), 2)
     return Rn
 
+
 class UpdateView(discord.ui.View):
     """embed league rating table with update button"""
+
     def __init__(self):
         """dunno"""
         super().__init__(timeout=None)
@@ -172,15 +183,17 @@ class UpdateView(discord.ui.View):
             )
         min_games = sql_select.minimal_games_property(conn)
         await interaction.response.edit_message(
-            content=f"Top resuts, played at least {min_games} "\
-                    "game(s)\nUpdated from {date.today()}",
+            content=f"Top resuts, played at least {min_games} "
+            "game(s)\nUpdated from {date.today()}",
             embed=embed,
             view=UpdateView(),
         )
 
+
 #########################                 #########################
 #########################     EVENTS      #########################
 #########################                 #########################
+
 
 @bot.event
 async def on_ready():
@@ -198,6 +211,7 @@ async def on_ready():
 #     ):
 #         await message.channel.send("hi")
 
+
 @bot.event
 async def on_member_join(member):
     """post welcome message on member join"""
@@ -206,26 +220,25 @@ async def on_member_join(member):
     channel_roles = bot.get_channel(channel_roles_id)
     channel_locaton = bot.get_channel(channel_location_id)
 
-
     embed = discord.Embed(
-            title="Добро пожаловать, пилот!",
-            colour=discord.Colour.random(),
-            description=f"Поприветствуем {member.mention}"
+        title="Добро пожаловать, пилот!",
+        colour=discord.Colour.random(),
+        description=f"Поприветствуем {member.mention}",
     )
-    embed.add_field(name="C чего начать:",
-                    value=f"""Пробегись по трём каналам в разделе \
+    embed.add_field(
+        name="C чего начать:",
+        value=f"""Пробегись по трём каналам в разделе \
                               **SYSTEM**:\n- {channel_navigation.mention} \
                               Узнаешь как здесь ориентироваться\n- \
                               {channel_roles.mention} Выберешь подходящие \
                               для себя роли\n- {channel_locaton.mention} \
                               Расскажи где ты живёшь, \
                               *чтобы получить роль своего города*\n""",
-                    inline=False
+        inline=False,
     )
     if member.guild.id == test_guild_id:
-        embed.add_field(name="This is a test",
-                    value="test",
-                    inline=False
+        embed.add_field(
+            name="This is a test", value="test", inline=False
         )
         channel_welcome = bot.get_channel(757377279474139156)
         await channel_welcome.send(embed=embed)
@@ -234,60 +247,72 @@ async def on_member_join(member):
     else:
         return
 
+
 #########################                 #########################
 ####################  LEGACY BUILDER PARSING ######################
 #########################                 #########################
 
+
 @bot.event
 async def on_message(message):
     """parse legacy-yasb link to post embed list"""
-    if message.author.bot: #check that author is not the bot itself
+    if message.author.bot:  # check that author is not the bot itself
         return
 
-    if '://xwing-legacy.com/?f' in message.content:
+    if "://xwing-legacy.com/?f" in message.content:
         yasb_channel = message.channel
 
         # convert YASB link to XWS
         yasb_link = message.content
-        #print(f"1) yasb_link = {yasb_link}")
+        # print(f"1) yasb_link = {yasb_link}")
         yasb_convert = yasb_link.replace(
-            '://xwing-legacy.com/',
-            '://squad2xws.herokuapp.com/yasb/xws'
+            "://xwing-legacy.com/",
+            "://squad2xws.herokuapp.com/yasb/xws",
         )
-        #print(f"2) yasb_convert = {yasb_convert}")
+        # print(f"2) yasb_convert = {yasb_convert}")
         yasb_xws = requests.get(yasb_convert, timeout=10)
-        #print(f"3) yasb_xws = {yasb_xws}")
+        # print(f"3) yasb_xws = {yasb_xws}")
         #############
         # don't know if it works at all???
-        #yasb_xws = unescape(yasb_xws) # delete all characters which prevents proper parsing
+        # yasb_xws = unescape(yasb_xws) # delete all characters which prevents proper parsing
 
-        yasb_json = yasb_xws.json() # raw XWS in JSON
-        #print(f"4) yasb_json = {yasb_json}")
-        yasb_json = json.dumps(yasb_json) # convert single quotes to double quotes
-        #print(f"5) yasb_json = {yasb_json}")
-        yasb_dict = json.loads(yasb_json) # convert JSON to python object
-        #print(f"6) yasb_dict = {yasb_dict}")
+        yasb_json = yasb_xws.json()  # raw XWS in JSON
+        # print(f"4) yasb_json = {yasb_json}")
+        yasb_json = json.dumps(
+            yasb_json
+        )  # convert single quotes to double quotes
+        # print(f"5) yasb_json = {yasb_json}")
+        yasb_dict = json.loads(
+            yasb_json
+        )  # convert JSON to python object
+        # print(f"6) yasb_dict = {yasb_dict}")
         #############
-        for key, value in yasb_dict.items(): # add embed title with list name as hyperlink
+        for (
+            key,
+            value,
+        ) in (
+            yasb_dict.items()
+        ):  # add embed title with list name as hyperlink
             if key in ["name"]:
                 embed = discord.Embed(
                     title=value,
                     colour=discord.Colour.random(),
                     url=message.content,
-                    description="YASB Legacy 2.0 list"
+                    description="YASB Legacy 2.0 list",
                 )
-        try: # use custom name for squads with default name from yasb
+        try:  # use custom name for squads with default name from yasb
             embed
         except NameError:
             embed = discord.Embed(
                 title="Infamous Squadron",
                 colour=discord.Colour.random(),
                 url=message.content,
-                description="YASB Legacy 2.0 list"
+                description="YASB Legacy 2.0 list",
             )
 
         embed.set_footer(
-            text=message.author.display_name, icon_url=message.author.display_avatar
+            text=message.author.display_name,
+            icon_url=message.author.display_avatar,
         )
 
         ####### TO DO ######## compare parsed results to data in xwing-data manifest
@@ -307,27 +332,37 @@ async def on_message(message):
         # loop = asyncio.get_event_loop()
         # # get JSON manifest from ttt-xwing-overlay repo
 
-    for key, value in yasb_dict.items(): # add embed fields with faction and list name
+    for (
+        key,
+        value,
+    ) in (
+        yasb_dict.items()
+    ):  # add embed fields with faction and list name
         if key in ["faction"]:
-            embed.add_field(name=key,
-                        value=value,
-                        inline=True
-            )
+            embed.add_field(name=key, value=value, inline=True)
 
     pilots_total = len(yasb_dict["pilots"])
 
-    for pilot in range(pilots_total): # add embed fields for each pilot in a list
-        embed.add_field(name=yasb_dict["pilots"][pilot]["id"],
-                        # value=list(yasb_dict["pilots"][pilot]["upgrades"].values()),
-                        value=re.sub(
-                            r"[\[\]\']",
-                            '\u200b',
-                            str(list(yasb_dict["pilots"][pilot]["upgrades"].values()))
-                        ),
-                        inline=False
-            )
+    for pilot in range(
+        pilots_total
+    ):  # add embed fields for each pilot in a list
+        embed.add_field(
+            name=yasb_dict["pilots"][pilot]["id"],
+            # value=list(yasb_dict["pilots"][pilot]["upgrades"].values()),
+            value=re.sub(
+                r"[\[\]\']",
+                "\u200b",
+                str(
+                    list(
+                        yasb_dict["pilots"][pilot]["upgrades"].values()
+                    )
+                ),
+            ),
+            inline=False,
+        )
     await yasb_channel.send(embed=embed)
     await message.delete()
+
 
 # http://xwing-legacy.com/ -> http://squad2xws.herokuapp.com/yasb/xws
 # http://xwing-legacy.com/?f=Separatist%20Alliance&d=v8ZsZ200Z305X115WW207W229Y356X456W248Y542XW470WW367WY542XW470WW367W&sn=Royal%20escort&obs=
@@ -335,7 +370,6 @@ async def on_message(message):
 #########################                 #########################
 #########################  INFO COMMANDS  #########################
 #########################                 #########################
-
 
 
 @bot.slash_command(
@@ -352,7 +386,8 @@ async def links(ctx):
         label="AMG Rules Forum", url="http://bit.ly/xwingrulesforum"
     )
     button3 = Button(
-        label="X-Wing Legacy 2.0 Rules", url="https://infinitearenas.com/legacy/docs/"
+        label="X-Wing Legacy 2.0 Rules",
+        url="https://infinitearenas.com/legacy/docs/",
     )
     button4 = Button(
         label="Buying guide per factions", url="https://bit.ly/2WzBq0c"
@@ -370,9 +405,7 @@ async def links(ctx):
 async def builders(ctx):
     """Squad Builders for X-Wing from comunity"""
 
-    button1 = Button(
-        label="YASB 2.6 (Web)", url="https://yasb.app/"
-    )
+    button1 = Button(label="YASB 2.6 (Web)", url="https://yasb.app/")
     button2 = Button(
         label="YASB Legacy 2.0 (Web)", url="https://xwing-legacy.com/"
     )
@@ -398,29 +431,31 @@ async def scenario_roll(
 ):
     """Get random scenario list for provided number of rounds"""
     scenario_list = [
-        'Assault at the Satellite Array',
-        'Chance Engagement',
-        'Salvage Mission',
-        'Scramble the Transmissions'
+        "Assault at the Satellite Array",
+        "Chance Engagement",
+        "Salvage Mission",
+        "Scramble the Transmissions",
     ]
     if rounds_number in range(1, 4):
         # pick # of random scenario from the list
         play_list = random.sample(scenario_list, k=rounds_number)
 
         embed = discord.Embed(
-                title=f"Scenario list for {rounds_number} rounds",
-                colour=discord.Colour.random(),
-            )
+            title=f"Scenario list for {rounds_number} rounds",
+            colour=discord.Colour.random(),
+        )
         embed.add_field(name="Set 1:", value=play_list, inline=False)
     elif rounds_number in range(5, 8):
         # pick # of random scenario from the list
         play_list_1 = random.sample(scenario_list, k=4)
-        play_list_2 = random.sample(scenario_list, k=(rounds_number-4))
+        play_list_2 = random.sample(
+            scenario_list, k=(rounds_number - 4)
+        )
 
         embed = discord.Embed(
-                title=f"Scenario list for {rounds_number} rounds",
-                colour=discord.Colour.random(),
-            )
+            title=f"Scenario list for {rounds_number} rounds",
+            colour=discord.Colour.random(),
+        )
         embed.add_field(name="Set 1:", value=play_list_1, inline=False)
         embed.add_field(name="Set 2:", value=play_list_2, inline=False)
     elif rounds_number < 1:
@@ -450,10 +485,8 @@ async def scenario_roll(
 #########################                   #########################
 
 
-@bot.slash_command(
-    guild_ids=[test_guild_id], default_permission=False
-)
-@permissions.has_role("league admin")
+@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
+@commands.has_role("league admin")
 async def register(ctx, member: discord.Member):
     """Give league member role to a mentioned user."""
     #    await ctx.respond(f"Hi, {member.name} also  known as {member.display_name}")
@@ -485,11 +518,12 @@ async def register(ctx, member: discord.Member):
         )
         await ctx.respond(embed=embed)
 
+
 @bot.slash_command(
     guild_ids=[test_guild_id, russian_guild_id],
     default_permission=False,
 )
-@permissions.has_role("league")
+@commands.has_role("league")
 async def status(ctx):
     """Get personal league stats."""
     pos = sql_select.rating_position(conn, ctx.author.id)
@@ -515,7 +549,7 @@ async def status(ctx):
     guild_ids=[test_guild_id, russian_guild_id],
     default_permission=False,
 )
-@permissions.has_role("league")
+@commands.has_role("league")
 async def check(ctx, member: discord.Member):
     """Get mutual games count."""
     # check if players have reached maximum of mutual games
@@ -531,13 +565,15 @@ async def check(ctx, member: discord.Member):
         )
         await ctx.respond(embed=embed)
         return
-    gcount = sql_select.mutual_games_played(conn, ctx.author.id, member.id)
+    gcount = sql_select.mutual_games_played(
+        conn, ctx.author.id, member.id
+    )
 
     embed = discord.Embed(colour=discord.Colour(0x6790A7))
     embed.add_field(
         name="Games played",
-        value="{} and {} have played {} games in total, " \
-            "not including tournament games.".format(
+        value="{} and {} have played {} games in total, "
+        "not including tournament games.".format(
             ctx.author.display_name, member.display_name, gcount
         ),
         inline=True,
@@ -549,7 +585,7 @@ async def check(ctx, member: discord.Member):
     guild_ids=[test_guild_id, russian_guild_id],
     default_permission=False,
 )
-@permissions.has_role("league admin")
+@commands.has_role("league admin")
 async def top(ctx):
     """Show full league leaderbord."""
     embed = discord.Embed(
@@ -578,8 +614,9 @@ async def top(ctx):
     n = 0
     cur = conn.cursor()
     for row in cur.execute(
-        f"SELECT member_name, rating FROM members " \
-        "WHERE member_id IN ({member_string}) ORDER BY rating DESC;"
+        f"SELECT member_name, rating FROM members "
+        "WHERE member_id IN (?) ORDER BY rating DESC;",
+        [member_string],
     ):
         n = n + 1
         embed.add_field(
@@ -594,10 +631,8 @@ async def top(ctx):
     )
 
 
-@bot.slash_command(
-    guild_ids=[test_guild_id], default_permission=False
-)
-@permissions.has_role("league")
+@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
+@commands.has_role("league")
 async def game(
     ctx,
     winner: Option(discord.Member, "@user", required=True),
@@ -740,7 +775,7 @@ async def game(
     )
 
     await ctx.respond(
-        f"(Game {game_id}): {winner.display_name} won against " \
+        f"(Game {game_id}): {winner.display_name} won against "
         "{looser.display_name} with {winner_points} - {looser_points} score!"
     )
     emb_msg = await ctx.send(embeds=[embed_win, embed_loss])
@@ -748,10 +783,8 @@ async def game(
         await emb_msg.add_reaction(reaction)
 
 
-@bot.slash_command(
-    guild_ids=[test_guild_id], default_permission=False
-)
-@permissions.has_role("league admin")
+@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
+@commands.has_role("league admin")
 async def tournament_game(
     ctx,
     winner: Option(discord.Member, "@user", required=True),
@@ -869,17 +902,15 @@ async def tournament_game(
     )
 
     msg = await ctx.respond(
-        f"(Game {game_id}): {winner.display_name} won " \
-        "in a tournament against {looser.display_name} " \
+        f"(Game {game_id}): {winner.display_name} won "
+        "in a tournament against {looser.display_name} "
         "with {winner_points} - {looser_points} score!"
     )
     await ctx.send(embeds=[embed_win, embed_loss])
 
 
-@bot.slash_command(
-    guild_ids=[test_guild_id], default_permission=False
-)
-@permissions.has_role("league admin")
+@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
+@commands.has_role("league admin")
 async def fun_win(
     ctx,
     winner: discord.Member,
@@ -902,10 +933,8 @@ async def fun_win(
     await ctx.respond(embed=embed)
 
 
-@bot.slash_command(
-    guild_ids=[test_guild_id], default_permission=False
-)
-@permissions.has_role("league admin")
+@bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
+@commands.has_role("league admin")
 async def fun_game(
     ctx,
     participant: discord.Member,
@@ -944,7 +973,7 @@ async def fun_game(
 
 
 @bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
-@permissions.permission(user_id=db_admin_id, permission=True)
+@commands.is_owner()
 async def league_create_tables(ctx):
     """Create tables first time"""
     if conn is not None:
@@ -955,13 +984,21 @@ async def league_create_tables(ctx):
 
         sql_db.create_table(conn, db_tables.SQL_CREATE_GAMES_TABLE)
 
-        sql_insert.set_properties(conn, db_properties.k_regular_properties)
+        sql_insert.set_properties(
+            conn, db_properties.k_regular_properties
+        )
 
-        sql_insert.set_properties(conn, db_properties.k_tournament_properties)
+        sql_insert.set_properties(
+            conn, db_properties.k_tournament_properties
+        )
 
-        sql_insert.set_properties(conn, db_properties.pt_fun_event_win_properties)
+        sql_insert.set_properties(
+            conn, db_properties.pt_fun_event_win_properties
+        )
 
-        sql_insert.set_properties(conn, db_properties.pt_fun_event_participation_properties)
+        sql_insert.set_properties(
+            conn, db_properties.pt_fun_event_participation_properties
+        )
 
         sql_insert.set_properties(conn, db_properties.num_mutual_games)
 
@@ -973,7 +1010,7 @@ async def league_create_tables(ctx):
 
 
 @bot.slash_command(guild_ids=[test_guild_id], default_permission=False)
-@permissions.permission(user_id=db_admin_id, permission=True)
+@commands.is_owner()
 async def league_recreate_tables(ctx):
     """Drop and Create tables for fresh start"""
     if conn is not None:
@@ -990,13 +1027,21 @@ async def league_recreate_tables(ctx):
 
         sql_db.create_table(conn, db_tables.SQL_CREATE_GAMES_TABLE)
 
-        sql_insert.set_properties(conn, db_properties.k_regular_properties)
+        sql_insert.set_properties(
+            conn, db_properties.k_regular_properties
+        )
 
-        sql_insert.set_properties(conn, db_properties.k_tournament_properties)
+        sql_insert.set_properties(
+            conn, db_properties.k_tournament_properties
+        )
 
-        sql_insert.set_properties(conn, db_properties.pt_fun_event_win_properties)
+        sql_insert.set_properties(
+            conn, db_properties.pt_fun_event_win_properties
+        )
 
-        sql_insert.set_properties(conn, db_properties.pt_fun_event_participation_properties)
+        sql_insert.set_properties(
+            conn, db_properties.pt_fun_event_participation_properties
+        )
 
         sql_insert.set_properties(conn, db_properties.num_mutual_games)
 
