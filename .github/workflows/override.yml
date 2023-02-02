@@ -8,6 +8,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      -
         name: Contingency protocol
         uses: cross-the-world/ssh-pipeline@master
         with:
