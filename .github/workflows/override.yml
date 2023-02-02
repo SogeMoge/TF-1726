@@ -1,6 +1,5 @@
 name: Manual override
 
-
 on:
   workflow_dispatch:
 
