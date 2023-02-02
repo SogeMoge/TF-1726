@@ -1,9 +1,12 @@
 version: "3"
-
+name: elobot
 services:
 
   elobot:
-    image: sogemoge/tf-1726:latest
+    image: docker.io/sogemoge/tf-1726:latest
+    container_name: tactical_droid
+    environment:
+      - COMPOSE_PROJECT_NAME
     restart: always
     ports:
       - 0.0.0.0:8080:800
@@ -14,6 +17,7 @@ services:
       - type: bind
         source: ./.env
         target: /opt/TF-1726/.env
+
 #    healthcheck:
 #      test: ["CMD", "curl", "127.0.0.1"]
 #      interval: 10s

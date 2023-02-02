@@ -1,0 +1,17 @@
+[Unit]
+Description=Podman management service
+DefaultDependencies=no
+Before=poweroff.target halt.target shutdown.target
+
+[Service]
+Type=oneshot
+User=sogemoge
+WorkingDirectory=/opt/TF-1726
+ExecStart=/opt/TF-1726/podman-compose.sh up
+ExecStop=/opt/TF-1726/podman-compose.sh down
+RemainAfterExit=yes
+TimeoutStartSec=0
+TimeoutSec=3600
+
+[Install]
+WantedBy=shutdown.target halt.target
