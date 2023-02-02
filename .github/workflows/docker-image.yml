@@ -1,11 +1,8 @@
 name: Docker Image CI
 
-# on:
-#   pull_request:
-#     branches: [ "main" ]
 on:
-  push:
-    branches: [ "feature/build_docker_action" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
