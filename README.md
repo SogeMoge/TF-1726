@@ -6,6 +6,8 @@ sudo apt-get update && sudo apt=get -y upgrade && sudo apt-get -y install podman
 sudo apt-get -y install python3-pip && pip3 install podman-compose
 podman login docker.io
 touch elo.db && touch .env
+sudo cp elobot.service /etc/systemd/system/
+sudo systemctl daemon-reload && sudo systemctl enable elobot
 
 ## Prepare Systemd
 

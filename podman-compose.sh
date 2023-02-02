@@ -1,12 +1,12 @@
 #!/bin/bash
 
 up() {
-    /home/sogemoge/.local/bin/podman-compose pull
-    /home/sogemoge/.local/bin/podman-compose up -d
+    podman-compose pull
+    podman-compose up -d
 }
 
 down() {
-    /home/sogemoge/.local/bin/podman-compose down
+    podman-compose down
 }
 
 case $1 in

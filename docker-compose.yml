@@ -1,10 +1,12 @@
 version: "3"
-
+name: elobot
 services:
 
   elobot:
     image: docker.io/sogemoge/tf-1726:latest
-    container_name: elobot
+    container_name: tactical_droid
+    environment:
+      - COMPOSE_PROJECT_NAME
     restart: always
     ports:
       - 0.0.0.0:8080:800
