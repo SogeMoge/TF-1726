@@ -4,6 +4,8 @@
 # https://stackoverflow.com/a/65908383
 # fixes libgcc_s.so.1 must be installed for pthread_cancel to work
 import ctypes
+
+# custom bot modules
 from elobot.sql import insert_win, manipulate_db, select_rating_data, update_member_rating
 from elobot.db import manipulate_tables, property_values
 from elobot.calculate_elo import calculate_rating, calculate_delta_points
@@ -21,25 +23,18 @@ import re
 import json
 from html import unescape
 
-
+# db modules
 import sqlite3
 from sqlite3 import Error
 import logging
 
+#pycord modules
 import discord
 from discord.ext import commands
 from discord.utils import get
 from discord.commands import Option
 from discord.commands import permissions
 from discord.ui import Button, View
-
-# custom bot modules
-import sql.sql_select
-import sql.sql_insert
-import sql.sql_update
-import sql.sql_db
-import db.db_properties
-import db.db_tables
 
 import requests
 from dotenv import load_dotenv
