@@ -4,6 +4,9 @@
 # https://stackoverflow.com/a/65908383
 # fixes libgcc_s.so.1 must be installed for pthread_cancel to work
 import ctypes
+from elobot.sql import insert_win, manipulate_db, select_rating_data, update_member_rating
+from elobot.db import manipulate_tables, property_values
+from elobot.calculate_elo import calculate_rating, calculate_delta_points
 
 libgcc_s = ctypes.CDLL("libgcc_s.so.1")
 
@@ -31,12 +34,12 @@ from discord.commands import permissions
 from discord.ui import Button, View
 
 # custom bot modules
-import sql_select
-import sql_insert
-import sql_update
-import sql_db
-import db_properties
-import db_tables
+import sql.sql_select
+import sql.sql_insert
+import sql.sql_update
+import sql.sql_db
+import db.db_properties
+import db.db_tables
 
 import requests
 from dotenv import load_dotenv
@@ -105,30 +108,6 @@ def create_connection(db_file):
 db_conn = create_connection(db)
 
 
-def delta_points(opponent_rating, member_rating):
-    """
-    Compute delta points for opponents
-    :param opponent_rating: current opponent rating
-    :param member_rating: current player ratng
-    """
-    E = round(
-        1 / (1 + 10 ** ((opponent_rating - member_rating) / 400)), 2
-    )
-    return E
-
-
-def rating(win, K, R, E):
-    """
-    Compute new rating
-    :param win: 1 for win, 0 for loss
-    :param K: K property extracted from DB
-    :param R: current rating of player
-    :param E: delta poins of player
-    """
-    Rn = round(R + K * (win - E), 2)
-    return Rn
-
-
 class UpdateView(discord.ui.View):
     """embed league rating table with update button"""
 
@@ -147,7 +126,7 @@ class UpdateView(discord.ui.View):
         embed = discord.Embed(
             title="League leaderboard", colour=discord.Colour(0xFFD700)
         )
-        min_games = sql_select.minimal_games_property(db_conn)
+        min_games = select_rating_data.minimal_games_property(db_conn)
 
         member_counter = 0
         cur = db_conn.cursor()
@@ -179,7 +158,7 @@ class UpdateView(discord.ui.View):
                 ),
                 inline=False,
             )
-        min_games = sql_select.minimal_games_property(db_conn)
+        min_games = select_rating_data.minimal_games_property(db_conn)
         await interaction.response.edit_message(
             content=f"Top resuts, played at least {min_games} "
             "game(s)\nUpdated from {date.today()}",
@@ -502,7 +481,7 @@ async def register(ctx, member: discord.Member):
         insert_member_sql_querry = f"""INSERT INTO \
                                        members(member_id, member_name) \
                                        VALUES ({member.id}, '{member.name}');"""
-        sql_insert.statement(db_conn, insert_member_sql_querry)
+        insert_win.statement(db_conn, insert_member_sql_querry)
         db_conn.commit()
         # add league role
         await member.add_roles(role)
@@ -524,9 +503,9 @@ async def register(ctx, member: discord.Member):
 @commands.has_role("league")
 async def status(ctx):
     """Get personal league stats."""
-    pos = sql_select.rating_position(db_conn, ctx.author.id)
+    pos = select_rating_data.rating_position(db_conn, ctx.author.id)
     # pos = 1
-    rows = sql_select.member_stats(db_conn, ctx.author.id)
+    rows = select_rating_data.member_stats(db_conn, ctx.author.id)
     for row in rows:
         embed = discord.Embed(
             title="League profile", colour=discord.Colour(0xFFD700)
@@ -563,7 +542,7 @@ async def check(ctx, member: discord.Member):
         )
         await ctx.respond(embed=embed)
         return
-    gcount = sql_select.mutual_games_played(
+    gcount = select_rating_data.mutual_games_played(
         db_conn, ctx.author.id, member.id
     )
 
@@ -591,11 +570,11 @@ async def top(ctx):
     )
     # cursor.execute(f'SELECT COUNT(member_id) FROM rating;')
     # pnum = cursor.fetchone()[0]
-    min_games = sql_select.minimal_games_property(db_conn)
+    min_games = select_rating_data.minimal_games_property(db_conn)
     member_list = []
 
     for member in ctx.guild.members:
-        rows = sql_select.member_stats(db_conn, member.id)
+        rows = select_rating_data.member_stats(db_conn, member.id)
         for row in rows:
             wins = row[2]
             losses = row[3]
@@ -641,8 +620,8 @@ async def game(
     """Submit regular leage game results."""
     role_check = discord.utils.get(ctx.guild.roles, name="league")
 
-    mutual_games_property = sql_select.mutual_games_property(db_conn)
-    mutual_games_count = sql_select.mutual_games_played(
+    mutual_games_property = select_rating_data.mutual_games_property(db_conn)
+    mutual_games_count = select_rating_data.mutual_games_played(
         db_conn, winner.id, looser.id
     )
 
@@ -703,37 +682,37 @@ async def game(
         return
 
     # K = execute_sql(db_conn, sql_get_k)
-    K = sql_select.k_regular(db_conn)
+    K = select_rating_data.k_regular(db_conn)
 
     ## extract current rating for message winner
     # winner rating
     # Ra = select_rating_sql(db_conn, winner.id)
-    Ra = sql_select.rating(db_conn, winner.id)
+    Ra = select_rating_data.rating(db_conn, winner.id)
 
     ## extract current rating for mentioned looser
     # looser rating
     # Rop = select_rating_sql(db_conn, looser.id)
-    Rop = sql_select.rating(db_conn, looser.id)
+    Rop = select_rating_data.rating(db_conn, looser.id)
     ### calculating ELO ###
 
     ## gathered delta points from current game result
     # Ea = round( 1 / (1 + 10 ** ((Rop - Ra) / 400)), 2)
-    Ea = delta_points(Rop, Ra)
+    Ea = calculate_delta_points(Rop, Ra)
     # Eop = round( 1 / (1 + 10 ** ((Ra - Rop) / 400 )), 2)
-    Eop = delta_points(Ra, Rop)
+    Eop = calculate_delta_points(Ra, Rop)
 
     ## calculate new rating
     # Calculate new Ra as Rna, 1 for win
     # Rna = round( Ra + K * (1 - Ea), 2)
-    Rna = rating(1, K, Ra, Ea)
+    Rna = calculate_rating(1, K, Ra, Ea)
     Rna_diff = round(Rna - Ra, 2)
 
     # Calculate new Rop as Rnop, 0 for loss
     # Rnop = round( Rop + K * (0 - Eop), 2)
-    Rnop = rating(0, K, Rop, Eop)
+    Rnop = calculate_rating(0, K, Rop, Eop)
     Rnop_diff = round(Rop - Rnop, 2)
 
-    curr_date = sql_select.curr_date(db_conn)
+    curr_date = select_rating_data.curr_date(db_conn)
     # insert game entry
     game_result = (
         winner.id,
@@ -744,10 +723,10 @@ async def game(
         Rnop_diff,
         curr_date,
     )
-    game_id = sql_insert.regular_win(db_conn, game_result)
+    game_id = insert_win.regular_win(db_conn, game_result)
 
-    sql_update.member(db_conn, (Rna, winner.id))
-    sql_update.member(db_conn, (Rnop, looser.id))
+    update_member_rating.member(db_conn, (Rna, winner.id))
+    update_member_rating.member(db_conn, (Rnop, looser.id))
 
     # Pretty output of updated rating for participant
     embed_win = discord.Embed(
@@ -826,7 +805,7 @@ async def tournament_game(
         return
 
     # K = execute_sql(db_conn, sql_get_k)
-    K = sql_select.k_tournament(db_conn)
+    K = select_rating_data.k_tournament(db_conn)
 
     # game will not count for mutual games
     tournament = 1
@@ -834,32 +813,32 @@ async def tournament_game(
     ## extract current rating for message winner
     # winner rating
     # Ra = select_rating_sql(db_conn, winner.id)
-    Ra = sql_select.rating(db_conn, winner.id)
+    Ra = select_rating_data.rating(db_conn, winner.id)
 
     ## extract current rating for mentioned looser
     # looser rating
     # Rop = select_rating_sql(db_conn, looser.id)
-    Rop = sql_select.rating(db_conn, looser.id)
+    Rop = select_rating_data.rating(db_conn, looser.id)
     ### calculating ELO ###
 
     ## gathered delta points from current game result
     # Ea = round( 1 / (1 + 10 ** ((Rop - Ra) / 400)), 2)
-    Ea = delta_points(Rop, Ra)
+    Ea = calculate_delta_points(Rop, Ra)
     # Eop = round( 1 / (1 + 10 ** ((Ra - Rop) / 400 )), 2)
-    Eop = delta_points(Ra, Rop)
+    Eop = calculate_delta_points(Ra, Rop)
 
     ## calculate new rating
     # Calculate new Ra as Rna, 1 for win
     # Rna = round( Ra + K * (1 - Ea), 2)
-    Rna = rating(1, K, Ra, Ea)
+    Rna = calculate_rating(1, K, Ra, Ea)
     Rna_diff = round(Rna - Ra, 2)
 
     # Calculate new Rop as Rnop, 0 for loss
     # Rnop = round( Rop + K * (0 - Eop), 2)
-    Rnop = rating(0, K, Rop, Eop)
+    Rnop = calculate_rating(0, K, Rop, Eop)
     Rnop_diff = round(Rop - Rnop, 2)
 
-    curr_date = sql_select.curr_date(db_conn)
+    curr_date = select_rating_data.curr_date(db_conn)
     # insert game entry
     game_result = (
         winner.id,
@@ -871,10 +850,10 @@ async def tournament_game(
         tournament,
         curr_date,
     )
-    game_id = sql_insert.tournament_win(db_conn, game_result)
+    game_id = insert_win.tournament_win(db_conn, game_result)
 
-    sql_update.member(db_conn, (Rna, winner.id))
-    sql_update.member(db_conn, (Rnop, looser.id))
+    update_member_rating.member(db_conn, (Rna, winner.id))
+    update_member_rating.member(db_conn, (Rnop, looser.id))
 
     # Pretty output of updated rating for participant
     embed_win = discord.Embed(
@@ -914,11 +893,11 @@ async def fun_win(
     winner: discord.Member,
 ):
     """score points for winning fun event"""
-    points = sql_select.fun_event_win_points(db_conn)
+    points = select_rating_data.fun_event_win_points(db_conn)
     # Ra = select_rating_sql(db_conn, winner.id)
-    Ra = sql_select.rating(db_conn, winner.id)
+    Ra = select_rating_data.rating(db_conn, winner.id)
     Rna = Ra + points
-    sql_update.member(db_conn, (Rna, winner.id))
+    update_member_rating.member(db_conn, (Rna, winner.id))
     embed = discord.Embed(
         title="Fun event win", colour=discord.Colour(0x00B300)
     )
@@ -938,11 +917,11 @@ async def fun_game(
     participant: discord.Member,
 ):
     """score points for participation in event"""
-    points = sql_select.fun_event_participation_points(db_conn)
+    points = select_rating_data.fun_event_participation_points(db_conn)
     # Ra = select_rating_sql(db_conn, participant.id)
-    Ra = sql_select.rating(db_conn, participant.id)
+    Ra = select_rating_data.rating(db_conn, participant.id)
     Rna = Ra + points
-    sql_update.member(db_conn, (Rna, participant.id))
+    update_member_rating.member(db_conn, (Rna, participant.id))
     embed = discord.Embed(
         title="Fun event participation", colour=discord.Colour(0x00B300)
     )
@@ -958,13 +937,6 @@ async def fun_game(
     await ctx.respond(embed=embed)
 
 
-# @bot.slash_command(guild_ids=[test_guild_id])
-# async def date(ctx):
-#     date = subprocess.Popen("date", stdout=subprocess.PIPE, universal_newlines=True, shell=True)
-#     output = date.stdout.read()
-#     await ctx.respond(f"{output}")
-
-
 ##########################             ##########################
 ########################## DB COMMANDS ##########################
 ##########################             ##########################
@@ -976,36 +948,36 @@ async def league_create_tables(ctx):
     """Create tables first time"""
     if db_conn is not None:
 
-        sql_db.create_table(db_conn, db_tables.SQL_CREATE_MEMBERS_TABLE)
+        manipulate_db.create_table(db_conn, manipulate_tables.SQL_CREATE_MEMBERS_TABLE)
 
-        sql_db.create_table(
-            db_conn, db_tables.SQL_CREATE_PROPERTIES_TABLE
+        manipulate_db.create_table(
+            db_conn, manipulate_tables.SQL_CREATE_PROPERTIES_TABLE
         )
 
-        sql_db.create_table(db_conn, db_tables.SQL_CREATE_GAMES_TABLE)
+        manipulate_db.create_table(db_conn, manipulate_tables.SQL_CREATE_GAMES_TABLE)
 
-        sql_insert.set_properties(
-            db_conn, db_properties.k_regular_properties
+        insert_win.set_properties(
+            db_conn, property_values.k_regular_properties
         )
 
-        sql_insert.set_properties(
-            db_conn, db_properties.k_tournament_properties
+        insert_win.set_properties(
+            db_conn, property_values.k_tournament_properties
         )
 
-        sql_insert.set_properties(
-            db_conn, db_properties.pt_fun_event_win_properties
+        insert_win.set_properties(
+            db_conn, property_values.pt_fun_event_win_properties
         )
 
-        sql_insert.set_properties(
-            db_conn, db_properties.pt_fun_event_participation_properties
+        insert_win.set_properties(
+            db_conn, property_values.pt_fun_event_participation_properties
         )
 
-        sql_insert.set_properties(
-            db_conn, db_properties.num_mutual_games
+        insert_win.set_properties(
+            db_conn, property_values.num_mutual_games
         )
 
-        sql_insert.set_properties(
-            db_conn, db_properties.num_minimal_games
+        insert_win.set_properties(
+            db_conn, property_values.num_minimal_games
         )
     else:
         print("Error! cannot create the database connection.")
@@ -1019,42 +991,42 @@ async def league_recreate_tables(ctx):
     """Drop and Create tables for fresh start"""
     if db_conn is not None:
 
-        sql_db.drop_table(db_conn, db_tables.SQL_DROP_MEMBERS_TABLE)
+        manipulate_db.drop_table(db_conn, manipulate_tables.SQL_DROP_MEMBERS_TABLE)
 
-        sql_db.drop_table(db_conn, db_tables.SQL_DROP_PROPERTIES_TABLE)
+        manipulate_db.drop_table(db_conn, manipulate_tables.SQL_DROP_PROPERTIES_TABLE)
 
-        sql_db.drop_table(db_conn, db_tables.SQL_DROP_GAMES_TABLE)
+        manipulate_db.drop_table(db_conn, manipulate_tables.SQL_DROP_GAMES_TABLE)
 
-        sql_db.create_table(db_conn, db_tables.SQL_CREATE_MEMBERS_TABLE)
+        manipulate_db.create_table(db_conn, manipulate_tables.SQL_CREATE_MEMBERS_TABLE)
 
-        sql_db.create_table(
-            db_conn, db_tables.SQL_CREATE_PROPERTIES_TABLE
+        manipulate_db.create_table(
+            db_conn, manipulate_tables.SQL_CREATE_PROPERTIES_TABLE
         )
 
-        sql_db.create_table(db_conn, db_tables.SQL_CREATE_GAMES_TABLE)
+        manipulate_db.create_table(db_conn, manipulate_tables.SQL_CREATE_GAMES_TABLE)
 
-        sql_insert.set_properties(
-            db_conn, db_properties.k_regular_properties
+        insert_win.set_properties(
+            db_conn, property_values.k_regular_properties
         )
 
-        sql_insert.set_properties(
-            db_conn, db_properties.k_tournament_properties
+        insert_win.set_properties(
+            db_conn, property_values.k_tournament_properties
         )
 
-        sql_insert.set_properties(
-            db_conn, db_properties.pt_fun_event_win_properties
+        insert_win.set_properties(
+            db_conn, property_values.pt_fun_event_win_properties
         )
 
-        sql_insert.set_properties(
-            db_conn, db_properties.pt_fun_event_participation_properties
+        insert_win.set_properties(
+            db_conn, property_values.pt_fun_event_participation_properties
         )
 
-        sql_insert.set_properties(
-            db_conn, db_properties.num_mutual_games
+        insert_win.set_properties(
+            db_conn, property_values.num_mutual_games
         )
 
-        sql_insert.set_properties(
-            db_conn, db_properties.num_minimal_games
+        insert_win.set_properties(
+            db_conn, property_values.num_minimal_games
         )
 
     else:
