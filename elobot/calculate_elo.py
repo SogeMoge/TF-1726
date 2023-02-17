@@ -1,3 +1,5 @@
+"""calculate rating states"""
+
 def calculate_delta_points(opponent_rating, member_rating):
     """
     Compute delta points for opponents

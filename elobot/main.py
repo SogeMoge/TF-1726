@@ -1,18 +1,14 @@
 """main bot file witt slash commands and events"""
-# pylint: disable=wrong-import-position, consider-using-f-string
+# pylint: disable=wrong-import-position, consider-using-f-string, E0602:undefined-variable
 
 # https://stackoverflow.com/a/65908383
 # fixes libgcc_s.so.1 must be installed for pthread_cancel to work
 import ctypes
 
-# custom bot modules
-from elobot.sql import insert_win, manipulate_db, select_rating_data, update_member_rating
-from elobot.db import manipulate_tables, property_values
-from elobot.calculate_elo import calculate_rating, calculate_delta_points
-
 libgcc_s = ctypes.CDLL("libgcc_s.so.1")
 
-import os
+# module for importing env variables
+from os import environ
 
 # import subprocess
 from datetime import date
@@ -21,23 +17,39 @@ import random
 # modules for YASB link parsing
 import re
 import json
-from html import unescape
+
+# from html import unescape
 
 # db modules
 import sqlite3
-from sqlite3 import Error
+
+# from sqlite3 import Error
 import logging
 
-#pycord modules
+# pycord modules
 import discord
 from discord.ext import commands
 from discord.utils import get
 from discord.commands import Option
-from discord.commands import permissions
+
+# from discord.commands import permissions
 from discord.ui import Button, View
 
 import requests
 from dotenv import load_dotenv
+
+# custom bot modules
+from elobot.sql import (
+    insert_win,
+    manipulate_db,
+    select_rating_data,
+    update_member_rating,
+)
+from elobot.db import manipulate_tables, property_values
+from elobot.calculate_elo import (
+    calculate_rating,
+    calculate_delta_points,
+)
 
 ##### Configure logging #####
 logger = logging.getLogger("discord")
@@ -55,23 +67,22 @@ bot = discord.Bot(intents=intents)
 
 #### Load .env vars and discord token"
 load_dotenv()
-token = os.environ.get("DISCORD_TOKEN")
+token = environ.get("DISCORD_TOKEN")
 
 ##### League vars #####
-results_channel_id = int(os.environ.get("RESULTS_CHANNEL_ID"))
-test_guild_id = int(os.environ.get("TEST_GUILD_ID"))
-russian_guild_id = int(os.environ.get("RUSSIAN_GUILD_ID"))
-db_admin_id = int(os.environ.get("DB_ADMIN_ID"))
-db = os.environ.get("DATABASE")
+results_channel_id = int(environ.get("RESULTS_CHANNEL_ID"))
+test_guild_id = int(environ.get("TEST_GUILD_ID"))
+russian_guild_id = int(environ.get("RUSSIAN_GUILD_ID"))
+db_admin_id = int(environ.get("DB_ADMIN_ID"))
+db = environ.get("DATABASE")
 ##### League vars #####
 
 ##### Welcome channel vars #####
-channel_welcome_id = int(os.environ.get("CHANNEL_WELCOME_ID"))
-channel_navigation_id = int(os.environ.get("CHANNEL_NAVIGATION_ID"))
-channel_roles_id = int(os.environ.get("CHANNEL_ROLES_ID"))
-channel_location_id = int(os.environ.get("CHANNEL_LOCATION_ID"))
+channel_welcome_id = int(environ.get("CHANNEL_WELCOME_ID"))
+channel_navigation_id = int(environ.get("CHANNEL_NAVIGATION_ID"))
+channel_roles_id = int(environ.get("CHANNEL_ROLES_ID"))
+channel_location_id = int(environ.get("CHANNEL_LOCATION_ID"))
 ##### Welcome channel vars #####
-
 
 ##### YASB PARSING VARS #####
 GITHUB_USER = "Gan0n29"
@@ -172,16 +183,6 @@ async def on_ready():
     """on_ready console message"""
     bot.add_view(UpdateView())
     print(f"{bot.user} is ready!")
-
-
-# @bot.event
-# async def on_message(message):
-
-#     if (
-#         bot.user.mentioned_in(message)
-#         and message.mention_everyone is False
-#     ):
-#         await message.channel.send("hi")
 
 
 @bot.event
@@ -615,7 +616,9 @@ async def game(
     """Submit regular leage game results."""
     role_check = discord.utils.get(ctx.guild.roles, name="league")
 
-    mutual_games_property = select_rating_data.mutual_games_property(db_conn)
+    mutual_games_property = select_rating_data.mutual_games_property(
+        db_conn
+    )
     mutual_games_count = select_rating_data.mutual_games_played(
         db_conn, winner.id, looser.id
     )
@@ -942,14 +945,17 @@ async def fun_game(
 async def league_create_tables(ctx):
     """Create tables first time"""
     if db_conn is not None:
-
-        manipulate_db.create_table(db_conn, manipulate_tables.SQL_CREATE_MEMBERS_TABLE)
+        manipulate_db.create_table(
+            db_conn, manipulate_tables.SQL_CREATE_MEMBERS_TABLE
+        )
 
         manipulate_db.create_table(
             db_conn, manipulate_tables.SQL_CREATE_PROPERTIES_TABLE
         )
 
-        manipulate_db.create_table(db_conn, manipulate_tables.SQL_CREATE_GAMES_TABLE)
+        manipulate_db.create_table(
+            db_conn, manipulate_tables.SQL_CREATE_GAMES_TABLE
+        )
 
         insert_win.set_properties(
             db_conn, property_values.k_regular_properties
@@ -964,7 +970,8 @@ async def league_create_tables(ctx):
         )
 
         insert_win.set_properties(
-            db_conn, property_values.pt_fun_event_participation_properties
+            db_conn,
+            property_values.pt_fun_event_participation_properties,
         )
 
         insert_win.set_properties(
@@ -985,20 +992,29 @@ async def league_create_tables(ctx):
 async def league_recreate_tables(ctx):
     """Drop and Create tables for fresh start"""
     if db_conn is not None:
+        manipulate_db.drop_table(
+            db_conn, manipulate_tables.SQL_DROP_MEMBERS_TABLE
+        )
 
-        manipulate_db.drop_table(db_conn, manipulate_tables.SQL_DROP_MEMBERS_TABLE)
+        manipulate_db.drop_table(
+            db_conn, manipulate_tables.SQL_DROP_PROPERTIES_TABLE
+        )
 
-        manipulate_db.drop_table(db_conn, manipulate_tables.SQL_DROP_PROPERTIES_TABLE)
+        manipulate_db.drop_table(
+            db_conn, manipulate_tables.SQL_DROP_GAMES_TABLE
+        )
 
-        manipulate_db.drop_table(db_conn, manipulate_tables.SQL_DROP_GAMES_TABLE)
-
-        manipulate_db.create_table(db_conn, manipulate_tables.SQL_CREATE_MEMBERS_TABLE)
+        manipulate_db.create_table(
+            db_conn, manipulate_tables.SQL_CREATE_MEMBERS_TABLE
+        )
 
         manipulate_db.create_table(
             db_conn, manipulate_tables.SQL_CREATE_PROPERTIES_TABLE
         )
 
-        manipulate_db.create_table(db_conn, manipulate_tables.SQL_CREATE_GAMES_TABLE)
+        manipulate_db.create_table(
+            db_conn, manipulate_tables.SQL_CREATE_GAMES_TABLE
+        )
 
         insert_win.set_properties(
             db_conn, property_values.k_regular_properties
@@ -1013,7 +1029,8 @@ async def league_recreate_tables(ctx):
         )
 
         insert_win.set_properties(
-            db_conn, property_values.pt_fun_event_participation_properties
+            db_conn,
+            property_values.pt_fun_event_participation_properties,
         )
 
         insert_win.set_properties(
